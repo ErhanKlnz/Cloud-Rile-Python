@@ -30,14 +30,7 @@ flow = Flow.from_client_secrets_file(
     scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
     redirect_uri="http://127.0.0.1:5000/callback"
 )
-def login_is_required(function):
-    def wrapper(*args, **kwargs):
-        if "google_id" not in session:
-            return abort(401)  # Authorization required
-        else:
-            return function()
 
-    return wrapper
 @app.route("/callback")
 def callback():
     flow.fetch_token(authorization_response=request.url)
@@ -76,7 +69,7 @@ def home():
     if 'loggedin' in session:
 
         # User is loggedin show them the home page
-        return render_template('welcomepageform.html', username=session['username'])
+        return render_template('inside_page.html', username=session['username'])
     # User is not loggedin redirect to login page
 
     return redirect(url_for('login'))

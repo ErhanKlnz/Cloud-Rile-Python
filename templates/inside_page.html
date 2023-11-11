@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>my drive main page</title>
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/bootstrap-icons.css') }}">
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/styles_main.css') }}">
+</head>
+<body>
+
+	<style>
+		
+		.hide{
+			display: none;
+		}
+
+		.class_46:hover{
+			background-color: rgb(125, 125, 125);
+			color: white;
+		}
+
+		.drop-zone:hover{
+			background-color: #ccc;
+			border: dotted 4px red;
+		}
+
+		.drop-zone{
+			height:200px;
+			border: dotted 4px #444;
+			border-radius: 10px;
+			background-color: #eee;
+			margin: 10px;
+			padding: 10px;
+			text-align: center;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+		}
+
+		.drop-zone-highlight{
+			background-color: #eed5d5;
+		}
+	</style>
+	<div class="class_1" >
+		<div class="class_2" >
+			<img src="static/assets/images/cloudreli.jpg" class="class_3" >
+		</div>
+		<div class="class_4" >
+			<h1 class="class_5"  >
+				MY DRIVE
+				<i class="bi bi-cloud-arrow-up-fill class_6"></i>
+			</h1>
+		</div>
+		<div class="class_7" >
+			<img src="static/assets/images/beautiful-sincere-happy-girl-smiling-laughing_176420-9693.jpg" class="class_8" >
+			<div class="class_9"  >
+				 <span class="username">{{ username }}!</span> <a href="{{ url_for('logout')}}" onclick="table.logout()">[logout]</a>
+			</div>
+		</div>
+	</div>
+	<div class="class_10" >
+		<div class="class_11" >
+			<button onclick="action.show_new_folder()" class="class_12"  >
+				+ New Folder
+			</button>
+			<div class="class_13" >
+				<div class="class_9"  >
+					Drive Space
+				</div>
+				<div class="class_14" >
+					<div class="js-drive-space-percent class_15" ></div>
+				</div>
+				<div class="js-drive-space-text class_9"  >
+					8Gb / 10Gb
+				</div>
+			</div>
+			<div id="MY DRIVE" onclick="mode.set(this.id);table.change_folder_by_id(0)" class="class_16" >
+				<i class="bi bi-cloud-arrow-up-fill class_17"></i>
+				<div class="class_9"  >
+					My Drive
+				</div>
+			</div>
+			<div id="FAVORITES" onclick="mode.set(this.id)" class="class_18" >
+				<i class="bi bi-star-fill class_17">
+				</i>
+				<div class="class_9"  >
+					Favorites
+				</div>
+			</div>
+			<div id="RECENT" onclick="mode.set(this.id)" class="class_18" >
+				<i class="bi bi-alarm-fill class_17">
+				</i>
+				<div class="class_9"  >
+					Recent
+				</div>
+			</div>
+			<div id="TRASH" onclick="mode.set(this.id)" class="class_18" >
+				<i class="bi bi-trash3-fill class_17">
+				</i>
+				<div class="class_9"  >
+					Trash
+				</div>
+			</div>
+		</div>
+		<div class="class_22" >
+			<div id="breadcrumbs" class="class_23" >
+				<div onclick="table.change_folder_by_id(0)" class="class_24"  >
+					My Drive
+				</div>
+				
+					<!--
+					<div class="class_25"  >
+						My First Folder
+					</div>
+					<div class="class_26"  >
+						My Second Folder
+					</div>
+					-->
+				
+			</div>
+			<h1 class="js-mode-title class_27"  >
+				MY DRIVE
+			</h1>
+			<div class="class_28" >
+				<table oncontextmenu="submenu.show(event)" class="item_class_0 class_29" style="font-size:13px">
+					
+					<thead >
+						
+						<tr >
+							<th scope="col" >
+								#
+							</th>
+							<th>
+								File Name
+							</th>
+							<th scope="col" >
+							</th>
+							
+							<th scope="col" >
+								Type
+							</th>
+							<th scope="col" >
+								Shared
+							</th>
+							<th scope="col" >
+								Updated
+							</th>
+							<th scope="col" >
+								Size
+							</th>
+							<th scope="col" >
+								Action
+							</th>
+						</tr>
+						
+					</thead>
+					
+					<tbody id="table-body" ondblclick="table.change_folder(event)" onclick="table.select(event)" >
+ 
+					</tbody>
+				</table>
+			</div>
+			<div class="class_41" style="display: flex;" >
+				<button onclick="table.prev()" class="class_42" style="min-width:100px"  >
+					Prev
+				</button>
+				<span class="js-page-number" style="text-align:center;width: 100%;display: inline-block;">Page 1</span>
+				<button onclick="table.next()" class="class_43" style="min-width:100px"  >
+					Next
+				</button>
+				<div class="class_44" >
+				</div>
+			</div>
+
+		</div>
+		<div class="class_47" >
+			<h1 class="class_48"  >
+				File Details
+			</h1>
+			<div class="class_28" >
+			</div>
+			<div class="js-file-info hide class_49" >
+				<table  class="item_class_2 class_50">
+					
+					<tbody >
+						<tr >
+							<th >
+								File:
+							</th>
+							<td class="file_name">
+								
+							</td>
+						</tr>
+						<tr >
+							<th >
+								Type:
+							</th>
+							
+							<td class="type">
+								
+							</td>
+							
+						</tr>
+						<tr >
+							<th >
+								Size:
+							</th>
+							
+							<td class="size">
+								
+							</td>
+							
+						</tr>
+						<tr >
+							<th >
+								Date Added:
+							</th>
+							<td class="date_created">
+								
+							</td>
+						</tr>
+						<tr >
+							<th >
+								Date Modified:
+							</th>
+							<td class="date_updated">
+								
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="js-info-no-file class_51" >
+				<i class="bi bi-info-circle-fill class_17">
+				</i>
+				<div class="class_9"  >
+					No file was selected
+				</div>
+			</div>
+			<label class="drop-zone" ondrop="upload.drop(event)" ondragover="upload.dragOver(event)" ondragleave="upload.dropZone.removeHighlight()">
+				<i class="bi bi-cloud-arrow-up-fill class_6"></i>
+				Drag and drop files here or click to upload
+				<input onchange="upload.send(this.files)" type="file" class="hide" multiple>
+				
+				<div class="js-prog-holder hide class_13" style="position: static;height: auto;background-color: transparent;" >
+
+					<div class="class_14" >
+						<div class="js-prog class_15" ></div>
+					</div>
+					<div class="js-prog-text class_9"  >
+						50%
+					</div>
+					<button onclick="upload.cancel()" class="class_42"  >
+						Cancel Upload
+					</button>
+				</div>
+
+			</label>
+		</div>
+	</div>
+
+<!--modals-->
+	<!--sub menu-->
+	<div id="submenu" class="class_45 hide" style="position: absolute;" >
+		
+		<div onclick="table.preview_file()" class="js-preview-button class_46" >
+			<i class="bi bi-eye class_17"></i>
+			<div class="class_9"  >
+				Preview
+			</div>
+		</div>
+		<div onclick="table.download_file()" class="js-download-button class_46" >
+			<i class="bi bi-cloud-download-fill class_17"></i>
+			<div class="class_9"  >
+				Download
+			</div>
+		</div>
+		<div class="class_46" >
+			<i class="bi bi-pencil-square class_17"></i>
+			<div class="class_9"  >
+				Edit
+			</div>
+		</div>
+		<div class="class_46" >
+			<i class="bi bi-folder-x class_17"></i>
+			<div class="class_9"  >
+				Move
+			</div>
+		</div>
+		<div onclick="table.delete_row()" class="class_46" >
+			<i class="bi bi-trash3-fill class_17"></i>
+			<div class="class_9"  >
+				Delete
+			</div>
+		</div>
+		<div onclick="table.restore_row()" class="js-restore-button class_46" >
+			<i class="bi bi-arrow-counterclockwise class_17"></i>
+			<div class="class_9"  >
+				Restore
+			</div>
+		</div>
+		
+		<div class="class_46" onclick="action.show_share_file()" >
+			<i class="bi bi-share-fill class_17"></i>
+			<div class="class_9"  >
+				Share
+			</div>
+		</div>
+		<div onclick="table.add_to_favorites()" class="js-favorites-button class_46" >
+			<i class="bi bi-star-fill class_17"></i>
+			<div class="js-favorites-text class_9"  >
+				Add to favorites
+			</div>
+		</div>
+	</div>
+	<!--end sub menu-->
+
+	<!-- start new folder modal-->
+	<div class="js-new-folder hide" onclick="this.classList.add('hide')" style="position:fixed;top:0px;left:0px;width:100vw;height:100vh;background-color:#00000088">
+		<div onclick="event.stopPropagation()" style="transform: translate(-50%,-50%);position:absolute;left:50%;top:50%;width:100%;max-width: 400px;min-height: 200px;background-color: white;padding:10px;text-align:center;">
+			<div onclick="document.querySelector('.js-new-folder').classList.add('hide')" style="text-align:right"><button class="class_42" style="padding-top:4px;padding-bottom:4px;background-color: red;">X</button></div>
+			<h3><i class="bi bi-folder-fill"></i> New Folder</h3>
+			<input class="js-new-folder-input" type="text" style="width:100%;padding:1em;border: solid thin #ccc;" name="">
+			<button onclick="action.new_folder(this)" class="class_42" style="width:100px">Save</button>
+		</div>
+	</div>
+	<!-- end new folder modal-->
+
+	<!-- start share modal-->
+	<style>
+		
+		.access-email .email{
+			flex:1;
+			padding-left: 5px;
+		}
+		.access-email .close{
+			flex:1;
+			max-width: 50px;
+			padding: 2px;
+			text-align: center;
+			cursor: pointer;
+			background-color: #ffb6b6;
+			color: #b50000;
+		}
+		.access-email{
+			display: flex;
+			background-color: #eee;
+			margin-top: 1px;
+			margin-bottom: 1px;
+			align-items: center;
+		}
+
+		.access-email-input button{
+			flex:1;
+			max-width: 50px;
+			cursor: pointer;
+		}
+		.access-email-input input{
+			flex:1;
+		}
+		.access-email-input{
+			display: flex;
+		}
+	</style>
+	<div class="js-share hide" onclick="this.classList.add('hide')" style="position:fixed;top:0px;left:0px;width:100vw;height:100vh;background-color:#00000088">
+		<div onclick="event.stopPropagation()" style="transform: translate(-50%,-50%);position:absolute;left:50%;top:50%;width:100%;max-width: 400px;min-height: 200px;background-color: white;padding:10px;text-align:center;">
+			<div onclick="document.querySelector('.js-share').classList.add('hide')" style="text-align:right"><button class="class_42" style="padding-top:4px;padding-bottom:4px;background-color: red;">X</button></div>
+			<h3><i class="bi bi-share-fill"></i> Share File</h3>
+
+			<div class="js-share-filename" style="padding:10px;background-color:#eee"></div>
+
+			<div style="text-align:left;padding: 10px;border: solid thin #eee;">
+				<label>
+					<input class="radio js-share-mode-0" type="radio" value="0" name="share"> Dont Share
+				</label><br>
+				<label>
+					<input class="radio js-share-mode-2" type="radio" value="2" name="share"> Share to public
+				</label><br>
+				<label>
+					<input class="radio js-share-mode-1" type="radio" value="1" name="share"> Share to specific people
+				</label><br>
+				<div style="padding:10px;border:solid thin #eee;">
+					<small>Type an email and click add:</small><br>
+					<div class="access-email-input">
+						<input class="js-access-email-input" type="text" name="">
+						<button onclick="share.add(this.parentNode.querySelector('.js-access-email-input').value.trim())">Add</button>
+					</div>
+					<div class="js-access-email-holder" style="max-height: 100px;overflow-y: auto;">
+
+					</div>
+				</div>
+				<br>
+				
+				<label>File link:</label><br>
+				<input class="js-share-link" value="" type="text" style="width:100%;padding:1em;border: solid thin #ccc;" name="link">
+
+			</div>
+			<button onclick="action.share_file(this)" class="class_42" style="width:100px">Save</button>
+		</div>
+	</div>
+	<!-- end share modal-->
+
+
+</body>
+</html>
+
+<script>
+	
+	var LOGGED_IN = false;
+	var USERNAME = false;
+	var FOLDER_ID = 0;
+	var DRIVE_OCCUPIED = 0;
+	var DRIVE_TOTAL = 0;
+
+	var share = {
+
+		add: function(email)
+		{
+			if(email == "")
+			{
+				alert("Please type an email address first");
+				document.querySelector(".js-access-email-input").focus();
+				return;
+			}
+
+			let reg = new RegExp;
+			reg = /^[a-zA-Z0-9\-\_\.]+\@[a-zA-Z0-9\-\_]+\.[a-zA-Z0-9\-\_\.]+$/g;
+			if(!email.match(reg))
+			{
+				alert("Please type a valid email address");
+				document.querySelector(".js-access-email-input").focus();
+				return;
+			}
+
+			let holder = document.querySelector(".js-access-email-holder");
+			let div = document.createElement('div');
+			div.setAttribute("class","access-email");
+			div.innerHTML = `
+				<div class="email">${email}</div>
+				<div class="close" onclick="share.remove(event)">X</div>
+				<input type="hidden" value="${email}">
+			`; 
+			holder.insertBefore(div,holder.children[0]); 
+			document.querySelector(".js-access-email-input").value = "";
+			document.querySelector(".js-access-email-input").focus();
+		},
+
+		remove: function(e)
+		{
+			if(!confirm("Are you sure you want to remove access for this email?!"))
+			{
+				return;
+			}
+			e.currentTarget.parentNode.remove();
+		},
+
+		refresh: function(obj)
+		{
+			document.querySelector(".js-access-email-holder").innerHTML = "";
+			let rows = JSON.parse(obj);
+			for (var i = 0; i < rows.length; i++) {
+				share.add(rows[i].email);
+			}
+		},
+
+	};
+
+	var mode = {
+
+		current: 'MY DRIVE',
+
+		set: function(m){
+
+			mode.current = m;
+			document.querySelector(".js-mode-title").innerHTML = mode.current;
+			let selected = document.querySelector(".class_16");
+			selected.classList.remove("class_16");
+			selected.classList.add("class_18");
+
+			let new_selected = document.getElementById(m);
+			new_selected.classList.remove("class_18");
+			new_selected.classList.add("class_16");
+
+			table.refresh(mode.current);
+		},
+	};
+
+	const submenu = {
+
+		show:function(e){
+			e.preventDefault();
+
+			table.select(e, 'rightclick');
+
+			let menu = document.getElementById("submenu");
+			menu.style.left = e.clientX + "px";
+			menu.style.top = (e.clientY + window.scrollY) + "px";
+			
+			//hide items not needed
+			document.querySelector("#submenu .js-favorites-text").innerHTML = "Add to favorites";
+			document.querySelector("#submenu .js-download-button").classList.add("hide");
+			document.querySelector("#submenu .js-favorites-button").classList.add("hide");
+			document.querySelector("#submenu .js-restore-button").classList.add("hide");
+			document.querySelector("#submenu .js-preview-button").classList.add("hide");
+			
+			let id = table.selected.getAttribute('id').replace("tr_","");			
+			if(table.ROWS[id].favorite == 1)
+			{
+				document.querySelector("#submenu .js-favorites-text").innerHTML = "Remove from favorites";
+			}
+
+			if(table.ROWS[id].file_type != 'folder')
+			{
+				document.querySelector("#submenu .js-download-button").classList.remove("hide");
+				document.querySelector("#submenu .js-favorites-button").classList.remove("hide");
+				document.querySelector("#submenu .js-preview-button").classList.remove("hide");
+			}
+			
+			if(mode.current == 'TRASH')
+			{
+				document.querySelector("#submenu .js-restore-button").classList.remove("hide");
+			}
+			
+
+			menu.classList.remove("hide");
+
+		},
+
+		hide:function(){
+			let menu = document.getElementById("submenu");
+			menu.classList.add("hide");
+		},
+
+	};
+
+	const table = {
+
+		selected: null,
+		selected_id: null,
+		page: 1,
+		ROWS: [],
+
+		prev: function()
+		{
+			table.page -= 1;
+			if(table.page < 1)
+				table.page = 1;
+
+			table.refresh(mode.current,table.page);
+			document.querySelector(".js-page-number").innerHTML = "Page " + table.page;
+		},
+
+		next: function()
+		{
+			table.page += 1;
+
+			table.refresh(mode.current,table.page);
+			document.querySelector(".js-page-number").innerHTML = "Page " + table.page;
+		},
+
+		select: function(e, mode = 'leftclick'){
+
+			let old_selected_id = table.selected_id;
+
+			table.selected = null;
+			table.selected_id = null;
+
+			let tbody = document.getElementById("table-body");
+			for (var i = 0; i < tbody.children.length; i++) {
+				tbody.children[i].classList.remove("class_38");
+			}
+
+
+			let item = e.target;
+			while(item.tagName != 'TR' && item.tagName != 'BODY'){
+				item = item.parentNode;
+			}
+
+			if(item.tagName == 'TR'){
+
+				if(mode == 'rightclick' || (old_selected_id == null || item.getAttribute('id') != old_selected_id))
+				{
+
+					table.selected = item;
+					table.selected_id = item.getAttribute('id');
+					table.selected.classList.add("class_38");
+
+					file_info.show(item.getAttribute('id').replace("tr_",""));
+				}else{
+					file_info.hide();
+				}
+			}
+			
+		},
+
+		preview_file: function()
+		{
+			let id = table.selected.getAttribute('id').replace("tr_","");
+			window.open('preview.html?id='+table.ROWS[id].slug,'_blank');
+		},
+
+		download_file: function()
+		{
+
+			let id = table.selected.getAttribute('id').replace("tr_","");			
+			window.location.href = "download.php?id=" + table.ROWS[id].id;
+		},
+
+		add_to_favorites: function()
+		{
+
+
+			let id = table.selected.getAttribute('id').replace("tr_","");			
+			
+			if(table.ROWS[id].file_type == 'folder')
+				return;
+
+			let obj = {};
+			obj.id 	= table.ROWS[id].id;
+			obj.data_type = 'add_to_favorites';
+			
+			action.send(obj);
+		},
+
+		change_folder_by_id: function(folder_id){
+			
+			FOLDER_ID = parseInt(folder_id);
+			table.refresh();
+		},
+
+		change_folder: function(e){
+
+			let item = e.target;
+			while(item.tagName != 'TR' && item.tagName != 'BODY'){
+				item = item.parentNode;
+			}
+
+			if(item.tagName == 'TR'){
+
+				let folder_id = item.getAttribute("folder_id");
+
+				if(folder_id){
+
+					FOLDER_ID = parseInt(folder_id);
+					table.refresh();
+				}
+
+			}
+		},
+
+		delete_row: function(){
+
+			if(!table.selected){
+				alert("Please select a row to delete!");
+				return;
+			}
+
+			if(!confirm("Are you sure you want to delete this item?!")){
+				return;
+			}
+
+			let obj = {};
+			obj.data_type = 'delete_row';
+			obj.file_type = table.selected.getAttribute('type');
+
+			let id = table.selected.getAttribute('id').replace("tr_","");
+			obj.id = table.ROWS[id].id;
+			action.send(obj);
+		},
+
+		restore_row: function(){
+
+			if(!table.selected){
+				alert("Please select a row to restore!");
+				return;
+			}
+
+			if(!confirm("Are you sure you want to restore this item?!")){
+				return;
+			}
+
+			let obj = {};
+			obj.data_type = 'restore_row';
+			obj.file_type = table.selected.getAttribute('type');
+
+			let id = table.selected.getAttribute('id').replace("tr_","");
+			obj.id = table.ROWS[id].id;
+			action.send(obj);
+		},
+
+		refresh: function(MODE = 'MY DRIVE', PAGE = 1){
+ 
+ 			//show a loader
+ 			let tbody = document.querySelector("#table-body");
+ 			tbody.innerHTML = `
+ 			<tr>
+ 				<td colspan='10' style='text-align:center;padding:10px'>
+ 					<img src="static/assets/images/loader.gif" style="width:100px;height:100px"/>
+ 				</td>
+ 			</tr>`;
+
+ 			//hide file info
+ 			file_info.hide();
+
+			let myform = new FormData();
+			myform.append('data_type','get_files');
+			myform.append('mode',MODE);
+			myform.append('page',PAGE);
+			myform.append('folder_id',FOLDER_ID);
+
+			let xhr = new XMLHttpRequest();
+			xhr.addEventListener('readystatechange',function(){
+
+				if(xhr.readyState == 4)
+				{
+					if(xhr.status == 200)
+					{
+						console.log(xhr.responseText);
+						//recreate table
+						let tbody = document.querySelector("#table-body");
+						tbody.innerHTML = "";
+
+						let obj = JSON.parse(xhr.responseText);
+
+						//display usename
+						if(!USERNAME){
+							USERNAME = obj.username;
+							document.querySelector(".username").innerHTML = obj.username;
+						}
+
+						//check if user is logged in
+						LOGGED_IN = obj.LOGGED_IN;
+						if(!LOGGED_IN)
+							window.location.href = 'login.html';
+
+						//update breadcrumbs
+						let crumbs = document.querySelector("#breadcrumbs");
+						crumbs.innerHTML = `<div onclick="table.change_folder_by_id(0)" class="class_24">My Drive</div>`;
+
+						for (var i = obj.breadcrumbs.length - 1; i >= 0; i--) {
+							
+							let class_name = 'class_25';
+							if(i == 0)
+								class_name = 'class_26';
+
+							crumbs.innerHTML += `<div onclick="table.change_folder_by_id(${obj.breadcrumbs[i].id})" class="${class_name}">${obj.breadcrumbs[i].name}</div>`;
+						}
+
+						//update drive space
+						let drive_occupied = (obj.drive_occupied / (1024*1024*1024)).toFixed(2);
+						let drive_percent = Math.round((drive_occupied / obj.drive_total) * 100);
+						
+						DRIVE_OCCUPIED = obj.drive_occupied;
+						DRIVE_TOTAL = obj.drive_total;
+
+						document.querySelector(".js-drive-space-text").innerHTML = `${drive_occupied}GB / ${obj.drive_total}GB`
+						document.querySelector(".js-drive-space-percent").style.width = `${drive_percent}%`
+						
+						if(obj.success && obj.data_type == "get_files")
+						{
+
+							table.ROWS = obj.rows;
+
+							for (var i = 0; i < obj.rows.length; i++) {
+								
+								let tr = document.createElement('tr');
+								tr.setAttribute('id','tr_'+i);
+
+								if(obj.rows[i].file_type == 'folder'){
+									tr.setAttribute('type','folder');
+								}else{
+									tr.setAttribute('type','file');
+								}
+
+								if(obj.rows[i].file_type == 'folder')
+									tr.setAttribute('folder_id',+ obj.rows[i].id);
+
+
+								let star = '';
+								if(obj.rows[i].file_type != 'folder')
+								{
+
+									star = '<i class="bi bi-star class_34"></i>';
+									if(obj.rows[i].favorite == 1)
+										star = '<i class="bi bi-star-fill class_34" style="color:rgb(255, 21, 226)"></i>';
+								}
+								
+								let download_link = "";
+								if(obj.rows[i].file_type != 'folder')
+								{
+									download_link = `
+									<a href="download.php?id=${obj.rows[i].id}">
+										<i class="bi bi-cloud-download-fill class_34"></i>
+									</a>`;
+								}
+ 								
+ 								let share_mode = `<i title="not shared" class="bi bi-person-x-fill class_34"></i>`;;
+								if(obj.rows[i].share_mode == 1)
+								{
+									share_mode = `<i title="shared with specific users" class="bi bi-people-fill class_34"></i>`;
+								}else
+								if(obj.rows[i].share_mode == 2)
+								{
+									share_mode = `<i title="shared to public" class="bi bi-globe-europe-africa class_34"></i>`;
+								}
+								
+ 
+								tr.innerHTML = `
+									<td>${obj.rows[i].icon}</td>
+									<td style="max-width: 200px;" >${obj.rows[i].file_name}</td>
+									<td>${star}</td>
+									<td style="max-width: 200px;">${obj.rows[i].file_type}</td>
+									<td>${share_mode}</td>
+									<td>${obj.rows[i].date_updated}</td>
+									<td>${obj.rows[i].file_size}</td>
+									<td>
+										${download_link}
+									</td>
+								`;
+
+								tbody.appendChild(tr);
+							}
+
+						}else{
+							tbody.innerHTML = `<tr><td colspan="10" style="text-align:center">No files found!</td></tr>`;
+						}
+
+					}else{
+						console.log(xhr.responseText);
+					}
+
+				}
+			});
+
+			xhr.open('post','api.php',true);
+			xhr.send(myform);
+
+		},
+
+		logout: function(){
+  
+			let myform = new FormData();
+			myform.append('data_type','user_logout');
+
+			let xhr = new XMLHttpRequest();
+			xhr.addEventListener('readystatechange',function(){
+
+				if(xhr.readyState == 4)
+				{
+					if(xhr.status == 200)
+					{
+						//console.log(xhr.responseText);
+ 						window.location.href = 'login.html';
+ 
+					}else{
+						console.log(xhr.responseText);
+					}
+
+				}
+			});
+
+			xhr.open('post','api.php',true);
+			xhr.send(myform);
+
+		},
+
+	}
+
+	const upload = {
+
+		cancelled: false,
+		uploading: false,
+
+		cancel: function(){
+			upload.cancelled = true;
+		},
+
+		dropZone: {
+
+			highlight: function(){
+				document.querySelector(".drop-zone").classList.add("drop-zone-highlight");
+			},
+			removeHighlight: function(){
+				document.querySelector(".drop-zone").classList.remove("drop-zone-highlight");
+			}
+		},
+
+		drop: function(e)
+		{
+			e.preventDefault();
+			upload.dropZone.removeHighlight();
+			upload.send(e.dataTransfer.files);
+		},
+
+		dragOver: function(){
+
+			event.preventDefault();
+			upload.dropZone.highlight();
+		},
+
+		reset_progress: function(){
+
+			document.querySelector(".js-prog").style.width = "0%";
+			document.querySelector(".js-prog-text").innerHTML = "0%";
+			document.querySelector(".js-prog-holder").classList.add("hide");
+		},
+
+		send: function(files){
+
+			if(upload.uploading){
+				alert("Please wait for the upload to complete!");
+				return;
+			}
+
+			upload.uploading = true;
+			upload.cancelled = false;
+			let myform = new FormData();
+			
+			myform.append('data_type','upload_files');
+			myform.append('folder_id',FOLDER_ID);
+
+			let file_size = 0;
+			for (var i = 0; i < files.length; i++) {
+				
+				file_size += files[i].size;
+				myform.append('file'+i,files[i]);
+			}
+
+			let drive_total = DRIVE_TOTAL * (1024 * 1024 * 1024);
+
+			if(parseInt(DRIVE_OCCUPIED) + parseInt(file_size) > (DRIVE_TOTAL * (1024 * 1024 * 1024)))
+			{
+				alert("There is not enough space to save files");
+				return;
+			}
+
+			upload.reset_progress();
+			document.querySelector(".js-prog-holder").classList.remove("hide");
+
+			let xhr = new XMLHttpRequest();
+
+			xhr.addEventListener('error',function(e){
+				alert("An error occured! Please check your connection");
+			});
+
+			xhr.upload.addEventListener('progress',function(e){
+
+				let percent = Math.round((e.loaded / e.total) * 100);
+				document.querySelector(".js-prog").style.width = percent + "%";
+				document.querySelector(".js-prog-text").innerHTML = percent + "%";
+
+				if(upload.cancelled){
+					xhr.abort();
+					alert("Your upload was cancelled!");
+					upload.reset_progress();
+				}
+			});
+
+			xhr.addEventListener('readystatechange',function(){
+
+				if(xhr.readyState == 4)
+				{
+					if(xhr.status == 200)
+					{
+						let obj = JSON.parse(xhr.responseText);
+						if(obj.success)
+						{
+							alert("Upload complete!");
+							table.refresh();
+						}else{
+							alert("Could not complete upload!");
+							if(typeof obj.errors != 'undefined')
+							{
+								for(key in obj.errors){
+									alert(obj.errors[key]);
+								}
+							}
+						}
+
+						upload.reset_progress();
+
+					}else{
+						console.log(xhr.responseText);
+						alert("An error occured! Please try again later");
+					}
+
+					upload.uploading = false;
+				}
+			});
+
+			xhr.open('post','api.php',true);
+			xhr.send(myform);
+		}
+	}
+
+	var file_info = {
+
+		show: function(id){
+
+			let row = table.ROWS[id];
+
+			document.querySelector(".js-info-no-file").classList.add("hide");
+			let file_info_panel = document.querySelector(".js-file-info");
+			file_info_panel.classList.remove("hide");
+			file_info_panel.querySelector(".file_name").innerHTML = row.file_name;
+			file_info_panel.querySelector(".size").innerHTML = row.file_size;
+			file_info_panel.querySelector(".type").innerHTML = row.file_type;
+			file_info_panel.querySelector(".date_created").innerHTML = row.date_created;
+			file_info_panel.querySelector(".date_updated").innerHTML = row.date_updated;
+		},
+
+		hide: function(){
+
+			document.querySelector(".js-info-no-file").classList.remove("hide");
+			document.querySelector(".js-file-info").classList.add("hide");
+		},
+
+		
+	};
+
+	const action = {
+
+		uploading: false,
+		cancelled: false,
+		root_path: "http://localhost/templates/mydrive/",
+
+		new_folder: function(){
+
+			let box = document.querySelector(".js-new-folder");
+			let text = box.querySelector("input").value.trim();
+			box.classList.add("hide");
+
+			let obj = {};
+			obj.data_type = 'new_folder';
+			obj.name = text;
+			obj.folder_id = FOLDER_ID;
+
+			action.send(obj);
+		},
+
+		share_file: function(){
+
+			let box = document.querySelector(".js-share");
+			let radios = box.querySelectorAll(".radio");
+			let share_mode = 0;
+
+			for (var i = radios.length - 1; i >= 0; i--) {
+				if(radios[i].checked)
+					share_mode = radios[i].value;
+			}
+
+			box.classList.add("hide");
+
+			//grab all share email addresses
+			let inputs = document.querySelector(".js-access-email-holder").querySelectorAll("input");
+			let emails = [];
+			for (var i = 0; i < inputs.length; i++) {
+				emails[i] = inputs[i].value;
+			}
+
+			let obj = {};
+			let id = table.selected.getAttribute('id').replace("tr_","");			
+			obj.id 	= table.ROWS[id].id;
+			obj.emails = JSON.stringify(emails);
+			obj.data_type = 'share_file';
+			obj.share_mode = share_mode;
+			obj.folder_id = FOLDER_ID;
+
+			action.send(obj);
+		},
+
+		show_new_folder: function(){
+
+			let box = document.querySelector(".js-new-folder");
+			box.classList.remove("hide");
+			box.querySelector("input").value = "";
+			box.querySelector("input").focus();
+		},
+
+		show_share_file: function(){
+
+			//get selected file info
+			let id = table.selected.getAttribute('id').replace("tr_","");			
+
+			let box = document.querySelector(".js-share");
+			box.classList.remove("hide");
+			box.querySelector(".js-share-filename").innerHTML = table.ROWS[id].file_name;
+			box.querySelector(".js-share-link").value = action.root_path + "preview.html?id="+table.ROWS[id].slug;
+
+			box.querySelector(".js-share-mode-"+table.ROWS[id].share_mode).checked = true;
+
+			box.querySelector(".js-share-link").focus();
+
+			share.refresh(table.ROWS[id].emails);
+		},
+
+		send: function(obj)
+		{
+
+			if(action.uploading){
+				alert("Please wait for the upload to complete!");
+				return;
+			}
+
+			action.uploading = true;
+			action.cancelled = false;
+			let myform = new FormData();
+			
+			for (key in obj) {
+				myform.append(key,obj[key]);
+			}
+
+			let xhr = new XMLHttpRequest();
+
+			xhr.addEventListener('error',function(e){
+				alert("An error occured! Please check your connection");
+			});
+
+			xhr.addEventListener('readystatechange',function(){
+
+				if(xhr.readyState == 4)
+				{
+					if(xhr.status == 200)
+					{
+						
+						action.handle_result(xhr.responseText)
+
+					}else{
+						console.log(xhr.responseText);
+						alert("An error occured! Please try again later");
+					}
+
+					action.uploading = false;
+				}
+			});
+
+			xhr.open('post','api.php',true);
+			xhr.send(myform);
+
+		},
+
+		handle_result: function(result)
+		{
+			console.log(result);
+			let obj = JSON.parse(result);
+
+			if(obj.success)
+			{
+				table.refresh(mode.current);
+			}else{
+				alert("Could not complete operation!");
+			}
+
+		},	
+
+
+
+	};
+
+	table.refresh();
+
+	window.addEventListener("click",function(){
+
+		submenu.hide();
+	});
+	
+</script>
