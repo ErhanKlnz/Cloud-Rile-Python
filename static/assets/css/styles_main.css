@@ -166,7 +166,7 @@ body{
 	padding-left: 10px;
 	padding-right: 10px;
 	margin: 10px;
-	font-family: amatic;
+	font-family: BungeeSpice;
 	letter-spacing: 10px;
 	display: flex;
 	
@@ -180,7 +180,6 @@ body{
 }
 
 .class_7{
-
 	flex: 1 1 0%;
 	vertical-align: top;
 	max-width: 200px;
@@ -211,14 +210,12 @@ body{
 }
 
 .class_10{
-	height: 100%;
-	background: #FF416C;
-	background: -webkit-linear-gradient(to right, #F4FF4F, #189F96);
-	background: linear-gradient(to right, #169F96, rgb(150, 226, 221));
 	display: flex;
 	flex-wrap: wrap;
+	background-color: rgb(150, 226, 221);
 	
 	min-height: 100vh;
+	
 	
 }
 
@@ -226,9 +223,8 @@ body{
 
 	flex: 1 1 0%;
 	min-height: 400px;
-	background: #FF416C;
-	background: -webkit-linear-gradient(to right, #169F96, rgb(150, 226, 221));
-	background: linear-gradient(to right, #169F96, rgb(150, 226, 221));
+	background-color: rgb(150, 226, 221);
+	
 	vertical-align: top;
 	max-width: 300px;
 	padding: 10px;
@@ -245,7 +241,7 @@ body{
 	padding: 10px;
 	border:none;
 	color:#FFFFFF;
-	background-color:#58D68D;
+	background-color:#52BE80;
 	border-radius:6px;
 	margin: .25rem .125rem;
 	cursor: pointer;
@@ -277,7 +273,7 @@ body{
 
 	width: 50%;
 	height: 100%;
-	background-color: rgb(116, 46, 206);
+	background-color: #52BE80;
 	color: rgb(255, 255, 255);
 	
 }
@@ -520,7 +516,7 @@ body{
 	padding: 10px;
 	border: medium none;
 	color: rgb(255, 255, 255);
-	background-color: rgb(81, 156, 66);
+	background-color: #808080;
 	border-radius: 6px;
 	margin: 0.25rem 0.125rem;
 	
@@ -533,7 +529,7 @@ body{
 	padding: 10px;
 	border: medium none;
 	color: rgb(255, 255, 255);
-	background-color: rgb(132, 30, 183);
+	background-color: #808080;
 	border-radius: 6px;
 	margin: 0.25rem 0.125rem;
 	float: right;

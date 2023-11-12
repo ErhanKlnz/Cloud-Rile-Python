@@ -15,9 +15,10 @@ import google.auth.transport.requests
 app = Flask(__name__)
 app.secret_key = 'cairocoders-ednalan'
 DB_HOST = "localhost"
-DB_NAME = "test"
+DB_NAME = "postgres"
 DB_USER = "postgres"
 DB_PASS = "erhan.2001"
+
 conn = psycopg2.connect(host=DB_HOST,dbname=DB_NAME, user=DB_USER, password=DB_PASS)
 
 #Google Connection
@@ -84,7 +85,7 @@ def login():
         password = request.form['password']
         print(password)
 
-        query = f"SELECT * FROM users WHERE user_email = '{email}'"
+        query = f"SELECT * FROM users WHERE email = '{email}'"
         # Check if account exists using MySQL
         cursor.execute(query)
         # Fetch one record and return result
@@ -93,16 +94,16 @@ def login():
 
         if account:
             id = account[0]
-            name = account[1]
-            email = account[2]
-            password_rs = account[3]
+            username = account[1]
+            email = account[3]
+            password_rs = account[2]
             # If account exists in users table in out database
             if check_password_hash(password_rs, password):
                 # Create session data, we can access this data in other routes
                 session['loggedin'] = True
                 session['id'] = id
                 session['email'] = email
-                session['username'] = name
+                session['username'] = username
                 # Redirect to home page
                 return redirect(url_for('home'))
             else:
@@ -129,7 +130,7 @@ def register():
         _hashed_password = generate_password_hash(password)
 
         #Check if account exists using MySQL
-        query = f"SELECT * FROM users WHERE user_name = '{username}'"
+        query = f"SELECT * FROM users WHERE username = '{username}'"
         cursor.execute(query)
         account = cursor.fetchone()
         print(account)
@@ -144,7 +145,7 @@ def register():
             flash('Please fill out the form!')
         else:
             # Account doesnt exists and the form data is valid, now insert new account into users table
-            cursor.execute("INSERT INTO users (user_name, user_password, user_email) VALUES (%s,%s,%s)", (username, _hashed_password, email))
+            cursor.execute("INSERT INTO users (username, password, email) VALUES (%s,%s,%s)", (username, _hashed_password, email))
             conn.commit()
             flash('You have successfully registered!')
     elif request.method == 'POST':
