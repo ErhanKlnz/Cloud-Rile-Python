@@ -97,19 +97,19 @@ def login():
             username = account[1]
             email = account[3]
             password_rs = account[2]
-            # If account exists in users table in out database
-            if check_password_hash(password_rs, password):
-                # Create session data, we can access this data in other routes
+
+            if  account and check_password_hash(account['password'], password_rs):
+                # Account doesnt exist or username/password incorrect
+                print("Hata")
+                flash('Incorrect username/password')
+
+            # If account exists in users table in our database
+            else:
                 session['loggedin'] = True
                 session['id'] = id
                 session['email'] = email
                 session['username'] = username
-                # Redirect to home page
                 return redirect(url_for('home'))
-            else:
-                # Account doesnt exist or username/password incorrect
-                print("Hata")
-                flash('Incorrect username/password')
         else:
             # Account doesnt exist or username/password incorrect
             flash('Incorrect username/password')
@@ -127,7 +127,7 @@ def register():
         password = request.form['password']
         email = request.form['email']
 
-        _hashed_password = generate_password_hash(password)
+
 
         #Check if account exists using MySQL
         query = f"SELECT * FROM users WHERE username = '{username}'"
@@ -145,7 +145,7 @@ def register():
             flash('Please fill out the form!')
         else:
             # Account doesnt exists and the form data is valid, now insert new account into users table
-            cursor.execute("INSERT INTO users (username, password, email) VALUES (%s,%s,%s)", (username, _hashed_password, email))
+            cursor.execute("INSERT INTO users (username, password, email) VALUES (%s,%s,%s)", (username, password, email))
             conn.commit()
             flash('You have successfully registered!')
     elif request.method == 'POST':
