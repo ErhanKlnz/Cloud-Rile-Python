@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
+        <meta charset="utf-8">
+        <title>CloudRile</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>my drive main page</title>
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/bootstrap-icons.css') }}">
@@ -16,7 +17,7 @@
 		}
 
 		.class_46:hover{
-			background-color: rgb(125, 125, 125);
+			background-color:linear-gradient(to right, #169F96, rgb(150, 226, 221));
 			color: white;
 		}
 
@@ -50,14 +51,14 @@
 		</div>
 		<div class="class_4" >
 			<h1 class="class_5"  >
-				MY DRIVE
+				CLOUDRELI
 				<i class="bi bi-cloud-arrow-up-fill class_6"></i>
 			</h1>
 		</div>
 		<div class="class_7" >
 			<img src="static/assets/images/beautiful-sincere-happy-girl-smiling-laughing_176420-9693.jpg" class="class_8" >
-			<div class="class_9"  >
-				 <span class="username">{{ username }}!</span> <a href="{{ url_for('logout')}}" onclick="table.logout()">[logout]</a>
+			<div class="class_9" >
+				 <span class="username">{{ username }}</span> <a class="class_52" href="{{ url_for('logout')}}" onclick="table.logout()"style="text-decoration: none; color: white;">Logout</a>
 			</div>
 		</div>
 	</div>
@@ -853,7 +854,7 @@
 					if(xhr.status == 200)
 					{
 						//console.log(xhr.responseText);
- 						window.location.href = 'login.html';
+ 						window.location.href = 'loginsignform.html';
  
 					}else{
 						console.log(xhr.responseText);

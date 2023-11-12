@@ -1,4 +1,3 @@
-
 import os
 import pathlib
 import requests
@@ -44,9 +43,11 @@ def callback():
     token_request = google.auth.transport.requests.Request(session=cached_session)
 
     id_info = id_token.verify_oauth2_token(
-        id_token=credentials._id_token,
+        id_token=credentials.id_token,
         request=token_request,
-        audience=GOOGLE_CLIENT_ID
+        audience=GOOGLE_CLIENT_ID,
+        clock_skew_in_seconds=10
+
     )
 
     session["google_id"] = id_info.get("sub")
@@ -59,8 +60,7 @@ def glogin():
     session["state"] = state
     return redirect(authorization_url)
 
-######
-
+###login and register
 @app.route('/')
 
 def home():
@@ -152,7 +152,6 @@ def register():
         flash('Please fill out the form!')
     # Show registration form with message (if any)
     return render_template('loginsignform.html')
-
 
 @app.route('/logout')
 def logout():
