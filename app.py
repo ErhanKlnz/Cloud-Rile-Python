@@ -17,6 +17,9 @@ from google_auth_oauthlib.flow import Flow
 from pip._vendor import cachecontrol
 import google.auth.transport.requests
 import random
+import uuid
+
+
 from werkzeug.utils import secure_filename
 
 
@@ -70,18 +73,52 @@ def glogin():
     session["state"] = state
     return redirect(authorization_url)
 
+# @app.get('/folders/<int:folder_id>')
+# def get_folders(folder_id):
+#     if 'loggedin' in session:
+#         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+#         user_id = session.get('id')
+#
+#         if folder_id:
+#             query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{folder_id}' "
+#
+#         cursor.execute(query)
+#         folders = cursor.fetchall()
+#
+#         # User is loggedin show them the home page
+#         return render_template('inside_page.html', username=session['username'], folders=folders)
+#     # User is not loggedin redirect to login page
+#
+#     return redirect(url_for('login'))
+
 ###login and register
 @app.route('/')
-
 def home():
-
     # Check if user is loggedin
     if 'loggedin' in session:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
         user_id = session.get('id')
 
-        query = f"SELECT * FROM folders WHERE user_id={user_id}"
+        query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = 0 "
+
+        cursor.execute(query)
+        folders = cursor.fetchall()
+
+        # User is loggedin show them the home page
+        return render_template('inside_page.html', username=session['username'], folders=folders)
+    # User is not loggedin redirect to login page
+
+    return redirect(url_for('login'))
+
+@app.route('/folders/<folder_id>')
+def folders(folder_id):
+    # Check if user is loggedin
+    if 'loggedin' in session:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        user_id = session.get('id')
+        print(folder_id)
+        query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{folder_id}' "
+
         cursor.execute(query)
         folders = cursor.fetchall()
 
@@ -101,18 +138,18 @@ def login():
         password = request.form['password']
         print(password)
 
+
         query = f"SELECT * FROM users WHERE email = '{email}'"
         # Check if account exists using MySQL
         cursor.execute(query)
         # Fetch one record and return result
         account = cursor.fetchone()
         print(account)
-
         if account:
-            id = account[0]
-            username = account[1]
-            email = account[3]
-            password_rs = account[2]
+            id = account[5]
+            username = account[0]
+            email = account[2]
+            password_rs = account[1]
 
             if  account and check_password_hash(account['password'], password_rs):
                 # Account doesnt exist or username/password incorrect
@@ -142,11 +179,15 @@ def register():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
-
+        my_uuid = uuid.uuid4()
         #Check if account exists using MySQL
         query = f"SELECT * FROM users WHERE username = '{username}'"
+
         cursor.execute(query)
         account = cursor.fetchone()
+
+
+        print('Your UUID is: ' + str(my_uuid))
         print(account)
         # If account exists show error and validation checks
         if account:
@@ -159,7 +200,7 @@ def register():
             flash('Please fill out the form!')
         else:
             # Account doesnt exists and the form data is valid, now insert new account into users table
-            cursor.execute("INSERT INTO users (username, password, email) VALUES (%s,%s,%s)", (username, password, email))
+            cursor.execute("INSERT INTO users (id,username, password, email) VALUES (%s,%s,%s,%s)", (str(my_uuid),username, password, email))
             conn.commit()
             flash('You have successfully registered!')
     elif request.method == 'POST':
@@ -332,6 +373,12 @@ def create_folder():
         """
 
     return redirect(url_for('index'))
+
+
+
+
+
+
 
 
 if __name__ == "__main__":

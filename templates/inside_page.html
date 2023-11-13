@@ -7,6 +7,7 @@
 	<title>my drive main page</title>
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/bootstrap-icons.css') }}">
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/styles_main.css') }}">
+	<link rel="stylesheet" type="text/css"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 <body>
 
@@ -47,7 +48,7 @@
 	</style>
 	<div class="class_1" >
 		<div class="class_2" >
-			<img src="static/assets/images/cloudreli.jpg" class="class_3" >
+			<img src="{{ url_for('static', filename='/assets/images/cloudreli.jpg') }}" class="class_3" >
 		</div>
 		<div class="class_4" >
 			<h1 class="class_5"  >
@@ -154,9 +155,11 @@
 							</th>
 						</tr>
 						{% for folder in folders %}
-							<tr>
+
+								<tr>
+
 								<td>
-									{{ folder[0] }}
+									<a href="{{ url_for('folders', folder_id=folder[0]) }}" class="fa-solid fa-folder" style="color: #16a095;"></a>
 								</td>
 								<td>
 									{{ folder[1] }}
@@ -176,7 +179,9 @@
 								<td>
 									action
 								</td>
+
 							</tr>
+
 						{% endfor %}
 						
 					</thead>
