@@ -1,16 +1,25 @@
 import os
 import pathlib
+import mode
 import requests
+import datetime
+import random
 import psycopg2.extras
-from flask import Flask, request, session, redirect, url_for, render_template, flash, abort
+from flask import Flask, request, session, redirect, url_for, render_template, flash, abort, jsonify, send_file, json
 import psycopg2
 import psycopg2.extras
 import re
+from datetime import datetime
+from oauthlib.uri_validate import query
 from werkzeug.security import generate_password_hash, check_password_hash
 from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
 from pip._vendor import cachecontrol
 import google.auth.transport.requests
+import random
+from werkzeug.utils import secure_filename
+
+
  
 app = Flask(__name__)
 app.secret_key = 'cairocoders-ednalan'
@@ -51,7 +60,7 @@ def callback():
 
     )
 
-    session["google_id"] = id_info.get("sub")
+    session["id"] = id_info.get("sub")
     session["username"] = id_info.get("name")
     session['loggedin'] = True
     return redirect(url_for('home'))
@@ -68,9 +77,16 @@ def home():
 
     # Check if user is loggedin
     if 'loggedin' in session:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        user_id = session.get('id')
+
+        query = f"SELECT * FROM folders WHERE user_id={user_id}"
+        cursor.execute(query)
+        folders = cursor.fetchall()
 
         # User is loggedin show them the home page
-        return render_template('inside_page.html', username=session['username'])
+        return render_template('inside_page.html', username=session['username'], folders=folders)
     # User is not loggedin redirect to login page
 
     return redirect(url_for('login'))
@@ -127,8 +143,6 @@ def register():
         password = request.form['password']
         email = request.form['email']
 
-
-
         #Check if account exists using MySQL
         query = f"SELECT * FROM users WHERE username = '{username}'"
         cursor.execute(query)
@@ -175,6 +189,150 @@ def profile():
         return render_template('profile.html', account=account)
     # User is not loggedin redirect to login page
     return redirect(url_for('login'))
+
+
+
+def get_drive_space(user_id):
+    # Implement the logic to get the drive space for the user
+    pass
+
+
+# Flask route to handle the incoming requests
+@app.route('/process_data', methods=['POST'])
+def process_data():
+    info = {}
+    info['success'] = False
+    info['LOGGED_IN'] = is_logged_in()
+    info['data_type'] = request.form.get('data_type', '')
+
+    works_without_login = ['user_signup', 'user_login', 'preview_file']
+    if not info['LOGGED_IN'] and info['data_type'] not in works_without_login:
+        return jsonify(info)
+
+    info['username'] = session.get('MY_DRIVE_USER', {}).get('username', 'User')
+    info['drive_occupied'] = get_drive_space(session.get('MY_DRIVE_USER', {}).get('id', 0))
+    info['drive_total'] = 10  # in GBs
+    info['breadcrumbs'] = []
+
+    return jsonify(info)
+
+
+def generate_slug():
+    # Implement your slug generation logic here
+    pass
+
+
+
+@app.route('/upload', methods=['POST'])
+def upload_files():
+    info = {'success': False, 'errors': []}
+
+    if request.method == 'POST' and 'data_type' in request.form and request.form['data_type'] == 'upload_files':
+        folder = 'uploads/'
+        if not os.path.exists(folder):
+            os.makedirs(folder, 0o777, True)
+            with open(os.path.join(folder, ".HTACCESS"), "w") as htaccess_file:
+                htaccess_file.write("Options -Indexes")
+
+        for key, file in request.files.items():
+            destination = os.path.join(folder, str(int(datetime.datetime.now().timestamp())) + file.filename)
+            if os.path.exists(destination):
+                destination = os.path.join(folder, str(int(datetime.datetime.now().timestamp())) + str(random.randint(0, 9999)) + file.filename)
+
+            file.save(destination)
+
+            # Check if there is enough space to save the file
+            occupied = info.get('drive_occupied', 0)
+            drive_total = info.get('drive_total', 0) * (1024 * 1024 * 1024)
+
+            if occupied + os.path.getsize(destination) <= drive_total:
+                # Save to database
+                file_type = file.content_type
+                date_created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                date_updated = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                file_name = file.filename
+                file_path = destination
+                file_size = os.path.getsize(destination)
+                user_id = getattr(request.session.get('MY_DRIVE_USER', {}), 'id', 0)
+                folder_id = int(request.form.get('folder_id', 0))
+                slug = generate_slug()
+
+                query_string = f"INSERT INTO mydrive (file_name, file_size, file_path, user_id, file_type, date_created, date_updated, folder_id, slug) VALUES " \
+                               f"('{file_name}', '{file_size}', '{file_path}', '{user_id}', '{file_type}', '{date_created}', '{date_updated}', '{folder_id}', '{slug}')"
+
+                query(query_string)
+
+                info['success'] = True
+            else:
+                info['success'] = False
+                info['errors'].append("You don't have enough space to add that file")
+
+    return info
+
+
+class User:
+    def __init__(self, user_id):
+        self.id = user_id
+
+
+class Folder:
+    def __init__(self, folder_name, user_id):
+        self.folder_name = folder_name
+        self.user_id = user_id
+
+
+# Bu dictionary, kullanıcı kimliklerini (user_id) ve bu kullanıcıların klasörlerini (Folder nesneleri) saklamak için kullanılır.
+users_folders = {}
+
+
+@app.route('/.')
+def index():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    user_id = session.get('user_id')
+
+    query = """ SELECT * FROM "folders" WHERE user_id=%s """
+    values = (user_id)
+    cursor.execute(query, values)
+    folders = cursor.fetchall()
+    print(folders)
+    print("folders")
+    # Kullanıcı giriş yapmışsa ve kullanıcıya ait klasörler varsa, bu klasörleri göster
+    if user_id and user_id in users_folders:
+        #folders = users_folders[user_id]
+        return render_template('inside_page.html', folders=folders)
+
+    return render_template('inside_page.html', folders=[])
+
+
+@app.route('/create_folder', methods=['POST'])
+def create_folder():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    folder_name = request.form.get('folder_name')
+    user_id = session.get('id')
+
+    print(folder_name)
+    print(user_id)
+
+    if folder_name and user_id:
+        query = """ INSERT INTO "folders" (name, user_id) VALUES (%s, %s) """
+        values = (folder_name, user_id)
+        cursor.execute(query, values)
+        conn.commit()
+
+        """
+        new_folder = Folder(folder_name=folder_name, user_id=user_id)
+
+        # Kullanıcının klasör listesi yoksa, boş bir liste oluştur
+        if user_id not in users_folders:
+            users_folders[user_id] = []
+
+        users_folders[user_id].append(new_folder)
+        """
+
+    return redirect(url_for('index'))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
