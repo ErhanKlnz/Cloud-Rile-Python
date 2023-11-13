@@ -4,10 +4,13 @@
         <meta charset="utf-8">
         <title>CLOUDRILE</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>my drive main page</title>
+
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/bootstrap-icons.css') }}">
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/styles_main.css') }}">
-	<link rel="stylesheet" type="text/css"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -53,13 +56,13 @@
 		<div class="class_4" >
 			<h1 class="class_5"  >
 				CLOUDRELI
-				
 			</h1>
 		</div>
 		<div class="class_7" >
 			<img src="static/assets/images/beautiful-sincere-happy-girl-smiling-laughing_176420-9693.jpg" class="class_8" >
 			<div class="class_9" >
-				 <span class="username">{{ username }}</span> <a class="class_52" href="{{ url_for('logout')}}" onclick="table.logout()"style="text-decoration: none; color: white;">Logout</a>
+				 <span class="username">{{ username }}</span> <a class="class_52" href="{{ url_for('logout')}}"
+																 onclick="table.logout()"style="text-decoration: none; color: white;">Logout</a>
 			</div>
 		</div>
 	</div>
@@ -165,7 +168,7 @@
 									{{ folder[1] }}
 								</td>
 								<td>
-									type
+									folder
 								</td>
 								<td>
 									shared

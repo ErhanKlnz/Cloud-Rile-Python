@@ -162,11 +162,11 @@ body{
 }
 
 .class_5{
-
+    font-family: 'Anton', sans-serif;
+    color: #19A197;
 	padding-left: 10px;
 	padding-right: 10px;
 	margin: 10px;
-	font-family: BungeeSpice;
 	letter-spacing: 10px;
 	display: flex;
 	
