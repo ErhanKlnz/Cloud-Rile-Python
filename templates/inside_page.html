@@ -13,23 +13,18 @@
 	<link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
 </head>
 <body>
-
 	<style>
-		
 		.hide{
 			display: none;
 		}
-
 		.class_46:hover{
 			background-color: rgb(125, 125, 125);
 			color: white;
 		}
-
 		.drop-zone:hover{
 			background-color: #ccc;
 			border: dotted 4px red;
 		}
-
 		.drop-zone{
 			height:200px;
 			border: dotted 4px #444;
@@ -44,14 +39,13 @@
 			justify-content: center;
 			cursor: pointer;
 		}
-
 		.drop-zone-highlight{
 			background-color: #eed5d5;
 		}
 	</style>
 	<div class="class_1" >
 		<div class="class_2" >
-			<img src="{{ url_for('static', filename='/assets/images/cloudreli.jpg') }}" class="class_3" >
+			<a href="{{ url_for('home') }}"> <img src="{{ url_for('static', filename='/assets/images/cloudreli.jpg') }}" class="class_3"></a>
 		</div>
 		<div class="class_4" >
 			<h1 class="class_5"  >
@@ -86,20 +80,6 @@
 				<i class="bi bi-cloud-arrow-up-fill class_17"></i>
 				<div class="class_9"  >
 					My Drive
-				</div>
-			</div>
-			<div id="FAVORITES" onclick="mode.set(this.id)" class="class_18" >
-				<i class="bi bi-star-fill class_17">
-				</i>
-				<div class="class_9"  >
-					Favorites
-				</div>
-			</div>
-			<div id="RECENT" onclick="mode.set(this.id)" class="class_18" >
-				<i class="bi bi-alarm-fill class_17">
-				</i>
-				<div class="class_9"  >
-					Recent
 				</div>
 			</div>
 			<div id="TRASH" onclick="mode.set(this.id)" class="class_18" >
@@ -144,9 +124,7 @@
 							<th scope="col" >
 								Type
 							</th>
-							<th scope="col" >
-								Shared
-							</th>
+
 							<th scope="col" >
 								Updated
 							</th>
@@ -170,9 +148,7 @@
 								<td>
 									folder
 								</td>
-								<td>
-									shared
-								</td>
+								
 								<td>
 									{{ folder[2] }}
 								</td>

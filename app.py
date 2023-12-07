@@ -18,8 +18,6 @@ from pip._vendor import cachecontrol
 import google.auth.transport.requests
 import random
 import uuid
-
-
 from werkzeug.utils import secure_filename
 
 
@@ -60,36 +58,32 @@ def callback():
         request=token_request,
         audience=GOOGLE_CLIENT_ID,
         clock_skew_in_seconds=10
-
     )
-
     session["id"] = id_info.get("sub")
     session["username"] = id_info.get("name")
+    session["email"] = id_info.get("email")
     session['loggedin'] = True
+    #  email = session["email"]
+    # username = session["username"]
+    # id = session["id"]
+    # if id and username and email:
+    #   cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    #
+    #   query = f"SELECT* FROM users WHERE id = '{id}'"
+    #   cursor.execute(query)
+    # else:
+    #   cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    #   cursor.execute("INSERT INTO users (id,username, email) VALUES (%s,%s,%s)", (str(id),username,email))
+    #   conn.commit()
+
     return redirect(url_for('home'))
 @app.route("/glogin")
 def glogin():
     authorization_url, state = flow.authorization_url()
     session["state"] = state
+
     return redirect(authorization_url)
 
-# @app.get('/folders/<int:folder_id>')
-# def get_folders(folder_id):
-#     if 'loggedin' in session:
-#         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-#         user_id = session.get('id')
-#
-#         if folder_id:
-#             query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{folder_id}' "
-#
-#         cursor.execute(query)
-#         folders = cursor.fetchall()
-#
-#         # User is loggedin show them the home page
-#         return render_template('inside_page.html', username=session['username'], folders=folders)
-#     # User is not loggedin redirect to login page
-#
-#     return redirect(url_for('login'))
 
 ###login and register
 @app.route('/')
@@ -98,7 +92,7 @@ def home():
     if 'loggedin' in session:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         user_id = session.get('id')
-
+        #conn.session.rollback()
         query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = 0 "
 
         cursor.execute(query)
@@ -116,17 +110,39 @@ def folders(folder_id):
     if 'loggedin' in session:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         user_id = session.get('id')
+
+
         print(folder_id)
         query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{folder_id}' "
 
         cursor.execute(query)
         folders = cursor.fetchall()
-
+        session['folders_id'] = folder_id
         # User is loggedin show them the home page
         return render_template('inside_page.html', username=session['username'], folders=folders)
     # User is not loggedin redirect to login page
 
     return redirect(url_for('login'))
+
+#thrash
+#@app.route('/thrash/')
+#def folders(folder_id):
+    #   # Check if user is loggedin
+    #if 'loggedin' in session:
+    #   cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    #   user_id = session.get('id')
+    #   print(folder_id)
+    #   query = f"INSERT INTO folders WHERE user_id= '{user_id}' AND id = '{folder_id}' t"
+    #
+    #   cursor.execute(query)
+    #   folders = cursor.fetchall()
+#
+        # User is loggedin show them the home page
+    #   return render_template('inside_page.html', username=session['username'], folders=folders)
+    # User is not loggedin redirect to login page
+#
+    #return redirect(url_for('login'))
+
 
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
@@ -146,23 +162,23 @@ def login():
         account = cursor.fetchone()
         print(account)
         if account:
-            id = account[5]
-            username = account[0]
-            email = account[2]
-            password_rs = account[1]
+            id = account[0]
+            email = account[1]
+            password_rs = account[2]
+            username = account[5]
 
-            if  account and check_password_hash(account['password'], password_rs):
+            if check_password_hash(password_rs, password):
                 # Account doesnt exist or username/password incorrect
-                print("Hata")
+                print("başarılı")
                 flash('Incorrect username/password')
-
-            # If account exists in users table in our database
-            else:
                 session['loggedin'] = True
                 session['id'] = id
                 session['email'] = email
                 session['username'] = username
                 return redirect(url_for('home'))
+            else:
+                # Account doesnt exist or username/password incorrect
+                flash('Incorrect username/password')
         else:
             # Account doesnt exist or username/password incorrect
             flash('Incorrect username/password')
@@ -179,6 +195,7 @@ def register():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
+        _hashed_password = generate_password_hash(password)
         my_uuid = uuid.uuid4()
         #Check if account exists using MySQL
         query = f"SELECT * FROM users WHERE username = '{username}'"
@@ -200,7 +217,7 @@ def register():
             flash('Please fill out the form!')
         else:
             # Account doesnt exists and the form data is valid, now insert new account into users table
-            cursor.execute("INSERT INTO users (id,username, password, email) VALUES (%s,%s,%s,%s)", (str(my_uuid),username, password, email))
+            cursor.execute("INSERT INTO users (id,username, password, email) VALUES (%s,%s,%s,%s)", (str(my_uuid),username,_hashed_password, email))
             conn.commit()
             flash('You have successfully registered!')
     elif request.method == 'POST':
@@ -231,39 +248,35 @@ def profile():
     # User is not loggedin redirect to login page
     return redirect(url_for('login'))
 
+@app.route('/create_folder', methods=['POST'])
+def create_folder():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
+    name = request.form.get('folder_name')
+    user_id = session.get('id')
+    folder_id = session.get('folder_id')
+    print(folder_id)
+    print(name)
+    print(user_id)
+    #conn.session.rollback()
 
-def get_drive_space(user_id):
-    # Implement the logic to get the drive space for the user
-    pass
+    if name and user_id and folder_id:
+        query = """ INSERT INTO folders (name, user_id, parent) VALUES (%s, %s, %s) """
+        values = (name, user_id, folder_id)
+        cursor.execute(query, values)
+        conn.commit()
 
+        """
+        new_folder = Folder(folder_name=folder_name, user_id=user_id)
 
-# Flask route to handle the incoming requests
-@app.route('/process_data', methods=['POST'])
-def process_data():
-    info = {}
-    info['success'] = False
-    info['LOGGED_IN'] = is_logged_in()
-    info['data_type'] = request.form.get('data_type', '')
+        # Kullanıcının klasör listesi yoksa, boş bir liste oluştur
+        if user_id not in users_folders:
+            users_folders[user_id] = []
 
-    works_without_login = ['user_signup', 'user_login', 'preview_file']
-    if not info['LOGGED_IN'] and info['data_type'] not in works_without_login:
-        return jsonify(info)
+        users_folders[user_id].append(new_folder)
+        """
 
-    info['username'] = session.get('MY_DRIVE_USER', {}).get('username', 'User')
-    info['drive_occupied'] = get_drive_space(session.get('MY_DRIVE_USER', {}).get('id', 0))
-    info['drive_total'] = 10  # in GBs
-    info['breadcrumbs'] = []
-
-    return jsonify(info)
-
-
-def generate_slug():
-    # Implement your slug generation logic here
-    pass
-
-
-
+    return redirect(url_for('home'))
 @app.route('/upload', methods=['POST'])
 def upload_files():
     info = {'success': False, 'errors': []}
@@ -311,70 +324,23 @@ def upload_files():
     return info
 
 
-class User:
-    def __init__(self, user_id):
-        self.id = user_id
+@app.route('/process_data', methods=['POST'])
+def process_data():
+    info = {}
+    info['success'] = False
+    info['LOGGED_IN'] = is_logged_in()
+    info['data_type'] = request.form.get('data_type', '')
 
+    works_without_login = ['user_signup', 'user_login', 'preview_file']
+    if not info['LOGGED_IN'] and info['data_type'] not in works_without_login:
+        return jsonify(info)
 
-class Folder:
-    def __init__(self, folder_name, user_id):
-        self.folder_name = folder_name
-        self.user_id = user_id
+    info['username'] = session.get('MY_DRIVE_USER', {}).get('username', 'User')
+    info['drive_occupied'] = get_drive_space(session.get('MY_DRIVE_USER', {}).get('id', 0))
+    info['drive_total'] = 10  # in GBs
+    info['breadcrumbs'] = []
 
-
-# Bu dictionary, kullanıcı kimliklerini (user_id) ve bu kullanıcıların klasörlerini (Folder nesneleri) saklamak için kullanılır.
-users_folders = {}
-
-
-@app.route('/.')
-def index():
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    user_id = session.get('user_id')
-
-    query = """ SELECT * FROM "folders" WHERE user_id=%s """
-    values = (user_id)
-    cursor.execute(query, values)
-    folders = cursor.fetchall()
-    print(folders)
-    print("folders")
-    # Kullanıcı giriş yapmışsa ve kullanıcıya ait klasörler varsa, bu klasörleri göster
-    if user_id and user_id in users_folders:
-        #folders = users_folders[user_id]
-        return render_template('inside_page.html', folders=folders)
-
-    return render_template('inside_page.html', folders=[])
-
-
-@app.route('/create_folder', methods=['POST'])
-def create_folder():
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    folder_name = request.form.get('folder_name')
-    user_id = session.get('id')
-
-    print(folder_name)
-    print(user_id)
-
-    if folder_name and user_id:
-        query = """ INSERT INTO "folders" (name, user_id) VALUES (%s, %s) """
-        values = (folder_name, user_id)
-        cursor.execute(query, values)
-        conn.commit()
-
-        """
-        new_folder = Folder(folder_name=folder_name, user_id=user_id)
-
-        # Kullanıcının klasör listesi yoksa, boş bir liste oluştur
-        if user_id not in users_folders:
-            users_folders[user_id] = []
-
-        users_folders[user_id].append(new_folder)
-        """
-
-    return redirect(url_for('index'))
-
-
+    return jsonify(info)
 
 
 
