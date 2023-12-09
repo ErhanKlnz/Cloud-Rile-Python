@@ -21,7 +21,7 @@ import uuid
 from werkzeug.utils import secure_filename
 
 
- 
+
 app = Flask(__name__)
 app.secret_key = 'cairocoders-ednalan'
 DB_HOST = "localhost"
@@ -63,18 +63,20 @@ def callback():
     session["username"] = id_info.get("name")
     session["email"] = id_info.get("email")
     session['loggedin'] = True
-    #  email = session["email"]
-    # username = session["username"]
-    # id = session["id"]
-    # if id and username and email:
-    #   cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    #
-    #   query = f"SELECT* FROM users WHERE id = '{id}'"
-    #   cursor.execute(query)
-    # else:
-    #   cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    #   cursor.execute("INSERT INTO users (id,username, email) VALUES (%s,%s,%s)", (str(id),username,email))
-    #   conn.commit()
+    session['folder_id'] = 0
+    email = session["email"]
+    username = session["username"]
+    id = session["id"]
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    query = f"SELECT* FROM users WHERE id = '{id}'"
+    cursor.execute(query)
+    user_find=cursor.fetchall()
+    print(id)
+    if not user_find:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute("INSERT INTO users (id,username, email) VALUES (%s,%s,%s)", (str(id), username, email))
+        conn.commit()
 
     return redirect(url_for('home'))
 @app.route("/glogin")
@@ -97,7 +99,7 @@ def home():
 
         cursor.execute(query)
         folders = cursor.fetchall()
-
+        session['folder_id'] = 0
         # User is loggedin show them the home page
         return render_template('inside_page.html', username=session['username'], folders=folders)
     # User is not loggedin redirect to login page
@@ -110,14 +112,14 @@ def folders(folder_id):
     if 'loggedin' in session:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         user_id = session.get('id')
-
+        session['folder_id'] = folder_id
 
         print(folder_id)
         query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{folder_id}' "
 
         cursor.execute(query)
         folders = cursor.fetchall()
-        session['folders_id'] = folder_id
+
         # User is loggedin show them the home page
         return render_template('inside_page.html', username=session['username'], folders=folders)
     # User is not loggedin redirect to login page
@@ -147,7 +149,7 @@ def folders(folder_id):
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
+    session['folder_id'] = 0
     # Check if "username" and "password" POST requests exist (user submitted form)
     if request.method == 'POST' and 'email' in request.form and 'password' in request.form:
         email = request.form['email']
@@ -250,8 +252,8 @@ def profile():
 
 @app.route('/create_folder', methods=['POST'])
 def create_folder():
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     name = request.form.get('folder_name')
     user_id = session.get('id')
     folder_id = session.get('folder_id')
@@ -260,9 +262,10 @@ def create_folder():
     print(user_id)
     #conn.session.rollback()
 
-    if name and user_id and folder_id:
+    if user_id:
+        print("test")
         query = """ INSERT INTO folders (name, user_id, parent) VALUES (%s, %s, %s) """
-        values = (name, user_id, folder_id)
+        values = (name, str(user_id), folder_id)
         cursor.execute(query, values)
         conn.commit()
 
@@ -276,7 +279,7 @@ def create_folder():
         users_folders[user_id].append(new_folder)
         """
 
-    return redirect(url_for('home'))
+    return redirect(url_for('folders', folder_id=folder_id))
 @app.route('/upload', methods=['POST'])
 def upload_files():
     info = {'success': False, 'errors': []}
