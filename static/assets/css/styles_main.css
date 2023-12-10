@@ -202,7 +202,7 @@ body{
 }
 
 .class_9{
-	
+	font-
     justify-content: center;
     align-items: center;
 	padding: 5px;
@@ -294,12 +294,11 @@ body{
 
 .class_17{
 
-	font-size: 30px;
+	font-size: 20px;
 	
 }
 
 .class_18{
-
 	height: 50px;
 	padding: 10px;
 	background-color: rgb(216, 216, 216);
@@ -622,4 +621,14 @@ body{
     justify-content: center;
     align-items: center;
 	
+}
+.icon-cell {
+  display: flex;
+  gap: 20px; /* İkonlar arasındaki boşluğu belirlemek için */
+}
+a {
+  color: #333;
+  font-size: 10px;
+  text-decoration: none;
+  margin: 1px 0;
 }

@@ -96,8 +96,8 @@ def home():
         user_id = session.get('id')
         #conn.session.rollback()
         query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = 0 "
-
         cursor.execute(query)
+
         folders = cursor.fetchall()
         session['folder_id'] = 0
         # User is loggedin show them the home page
@@ -105,46 +105,6 @@ def home():
     # User is not loggedin redirect to login page
 
     return redirect(url_for('login'))
-
-@app.route('/folders/<folder_id>')
-def folders(folder_id):
-    # Check if user is loggedin
-    if 'loggedin' in session:
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        user_id = session.get('id')
-        session['folder_id'] = folder_id
-
-        print(folder_id)
-        query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{folder_id}' "
-
-        cursor.execute(query)
-        folders = cursor.fetchall()
-
-        # User is loggedin show them the home page
-        return render_template('inside_page.html', username=session['username'], folders=folders)
-    # User is not loggedin redirect to login page
-
-    return redirect(url_for('login'))
-
-#thrash
-#@app.route('/thrash/')
-#def folders(folder_id):
-    #   # Check if user is loggedin
-    #if 'loggedin' in session:
-    #   cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    #   user_id = session.get('id')
-    #   print(folder_id)
-    #   query = f"INSERT INTO folders WHERE user_id= '{user_id}' AND id = '{folder_id}' t"
-    #
-    #   cursor.execute(query)
-    #   folders = cursor.fetchall()
-#
-        # User is loggedin show them the home page
-    #   return render_template('inside_page.html', username=session['username'], folders=folders)
-    # User is not loggedin redirect to login page
-#
-    #return redirect(url_for('login'))
-
 
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
@@ -249,6 +209,25 @@ def profile():
         return render_template('profile.html', account=account)
     # User is not loggedin redirect to login page
     return redirect(url_for('login'))
+@app.route('/folders/<folder_id>')
+def folders(folder_id):
+    # Check if user is loggedin
+    if 'loggedin' in session:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        user_id = session.get('id')
+        session['folder_id'] = folder_id
+
+        print(folder_id)
+        query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{folder_id}' "
+
+        cursor.execute(query)
+        folders = cursor.fetchall()
+
+        # User is loggedin show them the home page
+        return render_template('inside_page.html', username=session['username'], folders=folders)
+    # User is not loggedin redirect to login page
+
+    return redirect(url_for('login'))
 
 @app.route('/create_folder', methods=['POST'])
 def create_folder():
@@ -269,17 +248,40 @@ def create_folder():
         cursor.execute(query, values)
         conn.commit()
 
-        """
-        new_folder = Folder(folder_name=folder_name, user_id=user_id)
-
-        # Kullanıcının klasör listesi yoksa, boş bir liste oluştur
-        if user_id not in users_folders:
-            users_folders[user_id] = []
-
-        users_folders[user_id].append(new_folder)
-        """
-
     return redirect(url_for('folders', folder_id=folder_id))
+@app.route('/thrash/<folder_id>')
+def thrash(folder_id):
+    #   # Check if user is loggedin
+    if 'loggedin' in session:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        user_id = session.get('id')
+        print(folder_id)
+        query = f"INSERT INTO thrash (thrash_user_id,thrash_folder_id, folders_created_time,thrash_folder_name) SELECT user_id, id, data_created,name FROM folders WHERE  user_id = '{user_id}' AND id = '{folder_id}'"
+        cursor.execute(query)
+        sqlquery = f"DELETE FROM folders WHERE  user_id = '{user_id}' AND id = '{folder_id}' OR parent ='{folder_id}'"
+        cursor.execute(sqlquery)
+        conn.commit()
+        # User is loggedin show them the home page
+        return redirect(url_for('home'))
+     #User is not loggedin redirect to login page
+    return redirect(url_for('login'))
+@app.route('/thrashs/')
+def thrashs():
+    # Check if user is loggedin
+    if 'loggedin' in session:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        user_id = session.get('id')
+        print(user_id)
+        query = f"SELECT * FROM thrash WHERE thrash_user_id= '{user_id}' "
+        cursor.execute(query)
+        folders = cursor.fetchall()
+
+        # User is loggedin show them the home page
+        return render_template('inside_page.html', username=session['username'], folders=folders)
+    # User is not loggedin redirect to login page
+
+    return redirect(url_for('login'))
+
 @app.route('/upload', methods=['POST'])
 def upload_files():
     info = {'success': False, 'errors': []}
@@ -344,11 +346,6 @@ def process_data():
     info['breadcrumbs'] = []
 
     return jsonify(info)
-
-
-
-
-
 
 if __name__ == "__main__":
     app.run(debug=True)
