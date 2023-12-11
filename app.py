@@ -1,9 +1,7 @@
 import os
 import pathlib
-import mode
 import requests
 import datetime
-import random
 import psycopg2.extras
 from flask import Flask, request, session, redirect, url_for, render_template, flash, abort, jsonify, send_file, json
 import psycopg2
@@ -18,18 +16,55 @@ from pip._vendor import cachecontrol
 import google.auth.transport.requests
 import random
 import uuid
-from werkzeug.utils import secure_filename
-
+from flask import Flask, url_for, request
+#from authlib.integrations.flask_client import OAuth, OAuthError
+from dotenv import load_dotenv
+from flask_oauthlib.client import OAuth
 
 
 app = Flask(__name__)
+app.debug = True
 app.secret_key = 'cairocoders-ednalan'
 DB_HOST = "localhost"
 DB_NAME = "postgres"
 DB_USER = "postgres"
 DB_PASS = "erhan.2001"
 
+
 conn = psycopg2.connect(host=DB_HOST,dbname=DB_NAME, user=DB_USER, password=DB_PASS)
+#twitter
+oauth = OAuth(app)
+
+twitter = oauth.remote_app(
+    'twitter',
+    consumer_key='Scotymuq4yrRoSHaFR8TowKoL',
+    consumer_secret='reoiJNQaVT6lg440aMm1ONOmXvHiCsdGTWMQBtdF4fKsDO0SEx',
+    base_url='https://api.twitter.com/1.1/',
+    request_token_url='https://api.twitter.com/oauth/request_token',
+    access_token_url='https://api.twitter.com/oauth/access_token',
+    authorize_url='https://api.twitter.com/oauth/authorize'
+)
+@app.route('/t_login')
+def t_login():
+    callback_url = url_for('oauthorized', next=request.args.get('next'))
+    print(callback_url)
+    return twitter.authorize(callback=callback_url or request.referrer or None)
+
+
+@app.route('/t_logout')
+def t_logout():
+    session.pop('twitter_oauth', None)
+    return redirect(url_for('home'))
+
+
+@app.route('/oauthorized')
+def oauthorized():
+    resp = twitter.authorized_response()
+    if resp is None:
+        flash('You denied the request to sign in.')
+    else:
+        session['twitter_oauth'] = resp
+    return redirect(url_for('home'))
 
 #Google Connection
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1" # to allow Http traffic for local dev
@@ -83,9 +118,7 @@ def callback():
 def glogin():
     authorization_url, state = flow.authorization_url()
     session["state"] = state
-
     return redirect(authorization_url)
-
 
 ###login and register
 @app.route('/')
@@ -96,10 +129,19 @@ def home():
         user_id = session.get('id')
         #conn.session.rollback()
         query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = 0 "
+
         cursor.execute(query)
 
         folders = cursor.fetchall()
         session['folder_id'] = 0
+        for i in folders:
+            q = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{i[0]}'"
+            cursor.execute(q)
+            a = cursor.fetchall()
+            if len(a) > 0:
+                i.insert(len(i), True)
+            else:
+                i.insert(len(i), False)
         # User is loggedin show them the home page
         return render_template('inside_page.html', username=session['username'], folders=folders)
     # User is not loggedin redirect to login page
@@ -152,19 +194,20 @@ def register():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     # Check if "username", "password" and "email" POST requests exist (user submitted form)
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'email' in request.form:
+    if request.method == 'POST' and 'password' in request.form and 'email' in request.form:
         # Create variables for easy access
-        username = request.form['username']
+
         password = request.form['password']
         email = request.form['email']
         _hashed_password = generate_password_hash(password)
         my_uuid = uuid.uuid4()
+        username = email.split('@')[0]
+        print(username)
         #Check if account exists using MySQL
-        query = f"SELECT * FROM users WHERE username = '{username}'"
+        query = f"SELECT * FROM users WHERE email='{email}'"
 
         cursor.execute(query)
         account = cursor.fetchone()
-
 
         print('Your UUID is: ' + str(my_uuid))
         print(account)
@@ -217,11 +260,18 @@ def folders(folder_id):
         user_id = session.get('id')
         session['folder_id'] = folder_id
 
-        print(folder_id)
         query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{folder_id}' "
 
         cursor.execute(query)
         folders = cursor.fetchall()
+        for i in folders:
+            q = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{i[0]}'"
+            cursor.execute(q)
+            a = cursor.fetchall()
+            if len(a) > 0:
+                i.insert(len(i), True)
+            else:
+                i.insert(len(i), False)
 
         # User is loggedin show them the home page
         return render_template('inside_page.html', username=session['username'], folders=folders)
@@ -275,6 +325,14 @@ def thrashs():
         query = f"SELECT * FROM thrash WHERE thrash_user_id= '{user_id}' "
         cursor.execute(query)
         folders = cursor.fetchall()
+        for i in folders:
+            q = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{i[0]}'"
+            cursor.execute(q)
+            a = cursor.fetchall()
+            if len(a) > 0:
+                i.insert(len(i), True)
+            else:
+                i.insert(len(i), False)
 
         # User is loggedin show them the home page
         return render_template('inside_page.html', username=session['username'], folders=folders)
@@ -348,5 +406,6 @@ def process_data():
     return jsonify(info)
 
 if __name__ == "__main__":
+    load_dotenv()
     app.run(debug=True)
     #

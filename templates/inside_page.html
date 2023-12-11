@@ -139,7 +139,11 @@
 								<tr>
 
 								<td>
-									<a href="{{ url_for('folders', folder_id=folder[0]) }}" class="fa-solid fa-folder" style="color: #16a095;"></a>
+									{% if folder[7] %}
+										<a href="{{ url_for('folders', folder_id=folder[0]) }}" class="fa-solid fa-folder" style="color: #16a095;"></a>
+									{% else %}
+										<a href="{{ url_for('folders', folder_id=folder[0]) }}" class="fa-duotone fa-folder-open" style="color: #16a095;"></a>
+									{% endif %}
 								</td>
 								<td>
 									{{ folder[1] }}
