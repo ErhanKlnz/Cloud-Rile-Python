@@ -19,7 +19,14 @@ import uuid
 from flask import Flask, url_for, request
 #from authlib.integrations.flask_client import OAuth, OAuthError
 from dotenv import load_dotenv
+from flask import Flask, redirect, url_for, session
 from flask_oauthlib.client import OAuth
+
+
+
+
+
+
 
 
 app = Flask(__name__)
@@ -35,36 +42,38 @@ conn = psycopg2.connect(host=DB_HOST,dbname=DB_NAME, user=DB_USER, password=DB_P
 #twitter
 oauth = OAuth(app)
 
-twitter = oauth.remote_app(
-    'twitter',
-    consumer_key='Scotymuq4yrRoSHaFR8TowKoL',
-    consumer_secret='reoiJNQaVT6lg440aMm1ONOmXvHiCsdGTWMQBtdF4fKsDO0SEx',
-    base_url='https://api.twitter.com/1.1/',
-    request_token_url='https://api.twitter.com/oauth/request_token',
-    access_token_url='https://api.twitter.com/oauth/access_token',
-    authorize_url='https://api.twitter.com/oauth/authorize'
+facebook = oauth.remote_app(
+    'facebook',
+    consumer_key='658072539821648',
+    consumer_secret='9de56776348dc352ff38bd2e82bea2a3',
+    request_token_params={'scope': 'email'},
+    base_url='https://graph.facebook.com/',
+    request_token_url=None,
+    access_token_method='POST',
+    access_token_url='/oauth/access_token',
+    authorize_url='https://www.facebook.com/dialog/oauth'
 )
-@app.route('/t_login')
-def t_login():
-    callback_url = url_for('oauthorized', next=request.args.get('next'))
-    print(callback_url)
-    return twitter.authorize(callback=callback_url or request.referrer or None)
 
 
-@app.route('/t_logout')
-def t_logout():
-    session.pop('twitter_oauth', None)
-    return redirect(url_for('home'))
+
+@app.route('/f_login')
+def f_login():
+    return facebook.authorize(callback=url_for('authorized', _external=True))
 
 
-@app.route('/oauthorized')
-def oauthorized():
-    resp = twitter.authorized_response()
-    if resp is None:
-        flash('You denied the request to sign in.')
-    else:
-        session['twitter_oauth'] = resp
-    return redirect(url_for('home'))
+
+@app.route('/login/authorized')
+def authorized():
+    response = facebook.authorized_response()
+    if response is None or response.get('access_token') is None:
+        return 'Giriş yapılamadı!'
+    session['facebook_token'] = (response['access_token'], '')
+    return 'Başarıyla giriş yapıldı!'
+
+@facebook.tokengetter
+def get_facebook_oauth_token():
+    return session.get('facebook_token')
+
 
 #Google Connection
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1" # to allow Http traffic for local dev
@@ -386,6 +395,13 @@ def upload_files():
 
     return info
 
+
+@app.route('/forget_password')
+def forget_password():
+    if not'loggedin' in session:
+
+
+     return render_template('forgetpassword.html')
 
 @app.route('/process_data', methods=['POST'])
 def process_data():

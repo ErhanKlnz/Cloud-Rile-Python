@@ -7,16 +7,17 @@
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='\assets\images\cloudreli.jpg') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/stylesheets/style.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/stylesheets/bootstrap-grid.min.css') }}">
-    <link rel="stylesheet" type="text/css"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 <body>
+
 
 <div class="container" id="container" style="max-width: 800px">
     <div class="form-container sign-up-container">
         <form action="{{ url_for('register') }}" method="post" autocomplete="off">
             <h1>Hesap Oluştur</h1>
             <div class="social-container">
-                <a href="#" class="social"><i class="fa-brands fa-apple"></i></a>
+                <a href="{{url_for('f_login')}}" class="social"><i class="fa-brands fa-facebook fa-lg"></i></a>
                 <a href="{{url_for('glogin')}}" class="social"><i class="fab fa-google-plus-g"></i></a>
 
             </div>
@@ -52,13 +53,13 @@
         <form class="form-group" action="{{ url_for('login') }}" method="post">
             <h1>Giriş Yap</h1>
             <div class="social-container">
-                <a href="{{url_for('t_login')}}" class="social"><i class="fa-brands fa-apple"></i></a>
+                <a href="{{url_for('f_login')}}" class="social"><i class="fa-brands fa-facebook fa-lg"></i></a>
                 <a href="{{url_for('glogin')}}" class="social"><i class="fab fa-google-plus-g"></i></a>
             </div>
             <span>ya da hesabını kullan</span>
             <input type="email" class="form-control" name="email" placeholder="E-posta" id="email" required/>
             <input type="password" class="form-control" name="password" placeholder="Şifre" id="password" required>
-            <a href="#">Şifreni mi unuttun? Buraya tıkla!</a>
+            <a href="{{url_for('forget_password')}}">Şifreni mi unuttun? Buraya tıkla!</a>
 
             <input type="submit" value="Giriş" class="form-control btn btn-success " name="">
         </form>
