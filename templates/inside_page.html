@@ -135,34 +135,40 @@
 						{% for folder in folders %}
 
 								<tr>
+   									 <td>
+										 {% if folder[7] %}
+										 <a href="{{ url_for('folders', folder_id=folder[0]) }}" class="fa-solid fa-folder" style="color: #16a095;"></a>
+										 {% else %}
+										 <a href="{{ url_for('folders', folder_id=folder[0]) }}" class="fa-duotone fa-folder-open" style="color: #16a095;"></a>
+										 {% endif %}
+									 </td>
+									<td>{{ folder[1] }}</td>
+									<td>dosya</td>
+									<td>{{ folder[2] }}</td>
+									<td>size</td>
+									<td class="icon-cell">
+										<!--
+       												Eğer kullanıcı silme işlemini onaylarsa thrash fonksiyonunu çağır
+        										İptal ederse hiçbir şey yapma
+       													 -->
+										<a href="javascript:void(0);" class="fa-regular fa-trash-can" style="color: #16a095;" onclick="confirmDelete('{{ folder[0] }}')"></a>
+										<i class="fa-regular fa-pen-to-square" style="color: #16a095;"></i>
+										<i class="fa-solid fa-download" style="color: #16a095;"></i>
+									</td>
+								</tr>
 
-								<td>
-									{% if folder[7] %}
-										<a href="{{ url_for('folders', folder_id=folder[0]) }}" class="fa-solid fa-folder" style="color: #16a095;"></a>
-									{% else %}
-										<a href="{{ url_for('folders', folder_id=folder[0]) }}" class="fa-duotone fa-folder-open" style="color: #16a095;"></a>
-									{% endif %}
-								</td>
-								<td>
-									{{ folder[1] }}
-								</td>
-								<td>
-									dosya
-								</td>
-								
-								<td>
-									{{ folder[2] }}
-								</td>
-								<td>
-									size
-								</td>
-								<td class="icon-cell">
-									<a href="{{ url_for('thrash', folder_id=folder[0])}}" class="fa-regular fa-trash-can" style="color: #16a095;"></a>
-									<i class="fa-regular fa-pen-to-square" style="color: #16a095;" ></i>
-									<i class="fa-solid fa-download" style="color: #16a095;" ></i>
-								</td>
+						<script>
+						function confirmDelete(folderId) {
+    					var result = confirm("Emin misin?");
 
-							</tr>
+   						 if (result) {
+        				// Kullanıcı OK düğmesine tıkladı, silme işlemi yapabilirsiniz
+        				window.location.href = "{{ url_for('thrash', folder_id='') }}" + folderId;
+    					} else {
+        				// Kullanıcı İptal düğmesine tıkladı, hiçbir şey yapmayabilirsiniz
+ }
+}
+</script>
 
 						{% endfor %}
 						
