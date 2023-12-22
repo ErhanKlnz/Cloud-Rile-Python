@@ -16,30 +16,30 @@ from pip._vendor import cachecontrol
 import google.auth.transport.requests
 import random
 import uuid
-from flask import Flask, url_for, request
-#from authlib.integrations.flask_client import OAuth, OAuthError
+from flask import Flask, url_for, request, send_from_directory, send_file
+# from authlib.integrations.flask_client import OAuth, OAuthError
 from dotenv import load_dotenv
 from flask import Flask, redirect, url_for, session
 from flask_oauthlib.client import OAuth
+from werkzeug.utils import secure_filename
 
-
-
-
-
-
-
+UPLOAD_FOLDER = 'static\\uploads'
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv'}
+MAX_USER_ALLOCATION = 5000000  # in bytes
 
 app = Flask(__name__)
 app.debug = True
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000  # max 16 MB
 app.secret_key = 'cairocoders-ednalan'
 DB_HOST = "localhost"
 DB_NAME = "postgres"
 DB_USER = "postgres"
 DB_PASS = "erhan.2001"
 
-
-conn = psycopg2.connect(host=DB_HOST,dbname=DB_NAME, user=DB_USER, password=DB_PASS)
-#twitter
+conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASS)
+# twitter
 oauth = OAuth(app)
 
 facebook = oauth.remote_app(
@@ -55,11 +55,9 @@ facebook = oauth.remote_app(
 )
 
 
-
 @app.route('/f_login')
 def f_login():
     return facebook.authorize(callback=url_for('authorized', _external=True))
-
 
 
 @app.route('/login/authorized')
@@ -70,20 +68,23 @@ def authorized():
     session['facebook_token'] = (response['access_token'], '')
     return 'Başarıyla giriş yapıldı!'
 
+
 @facebook.tokengetter
 def get_facebook_oauth_token():
     return session.get('facebook_token')
 
 
-#Google Connection
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1" # to allow Http traffic for local dev
+# Google Connection
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"  # to allow Http traffic for local dev
 GOOGLE_CLIENT_ID = "733339164445-d0o2qd6f28dpkv792ckt80adv3cmn47e.apps.googleusercontent.com"
 client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "client_secret.json")
 flow = Flow.from_client_secrets_file(
     client_secrets_file=client_secrets_file,
-    scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
+    scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email",
+            "openid"],
     redirect_uri="http://127.0.0.1:5000/callback"
 )
+
 
 @app.route("/callback")
 def callback():
@@ -115,7 +116,7 @@ def callback():
 
     query = f"SELECT* FROM users WHERE id = '{id}'"
     cursor.execute(query)
-    user_find=cursor.fetchall()
+    user_find = cursor.fetchall()
     print(id)
     if not user_find:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -123,11 +124,14 @@ def callback():
         conn.commit()
 
     return redirect(url_for('home'))
+
+
 @app.route("/glogin")
 def glogin():
     authorization_url, state = flow.authorization_url()
     session["state"] = state
     return redirect(authorization_url)
+
 
 ###login and register
 @app.route('/')
@@ -136,26 +140,46 @@ def home():
     if 'loggedin' in session:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         user_id = session.get('id')
-        #conn.session.rollback()
-        query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = 0 "
+        # conn.session.rollback()
+        query_folders = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = 0"
+        query_files = f"SELECT * FROM mycloud WHERE user_id='{user_id}' AND folder_id = 0"
+        query_current_space = f"SELECT SUM(file_size) FROM mycloud WHERE user_id='{user_id}'"
 
-        cursor.execute(query)
-
+        cursor.execute(query_current_space)
+        current_space = cursor.fetchall()
+        if current_space[0][0] is not None:
+            print(current_space)
+            current_space = current_space[0][0]
+            current_space_as_percent = int((current_space / MAX_USER_ALLOCATION) * 100)
+        else:
+            current_space = 0
+            current_space_as_percent = 0
+        cursor.execute(query_folders)
         folders = cursor.fetchall()
+
+        cursor.execute(query_files)
+        files = cursor.fetchall()
+
         session['folder_id'] = 0
         for i in folders:
-            q = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{i[0]}'"
-            cursor.execute(q)
-            a = cursor.fetchall()
-            if len(a) > 0:
+            q_folder = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{i[0]}'"
+            q_file = query_files = f"SELECT * FROM mycloud WHERE user_id='{user_id}' AND folder_id = {i[0]}"
+            cursor.execute(q_folder)
+            f_folder = cursor.fetchall()
+            cursor.execute(q_file)
+            f_file = cursor.fetchall()
+            if len(q_folder) > 0 or len(q_file) > 0:
                 i.insert(len(i), True)
             else:
                 i.insert(len(i), False)
         # User is loggedin show them the home page
-        return render_template('inside_page.html', username=session['username'], folders=folders)
+        return render_template('inside_page.html', username=session['username'], folders=folders, files=files,
+                               folder_id=0, current_space_as_percent=current_space_as_percent,
+                               current_space=current_space, max_space=MAX_USER_ALLOCATION)
     # User is not loggedin redirect to login page
 
     return redirect(url_for('login'))
+
 
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
@@ -166,7 +190,6 @@ def login():
         email = request.form['email']
         password = request.form['password']
         print(password)
-
 
         query = f"SELECT * FROM users WHERE email = '{email}'"
         # Check if account exists using MySQL
@@ -198,6 +221,7 @@ def login():
 
     return render_template('loginsignform.html')
 
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -212,7 +236,7 @@ def register():
         my_uuid = uuid.uuid4()
         username = email.split('@')[0]
         print(username)
-        #Check if account exists using MySQL
+        # Check if account exists using MySQL
         query = f"SELECT * FROM users WHERE email='{email}'"
 
         cursor.execute(query)
@@ -231,7 +255,8 @@ def register():
             flash('Please fill out the form!')
         else:
             # Account doesnt exists and the form data is valid, now insert new account into users table
-            cursor.execute("INSERT INTO users (id,username, password, email) VALUES (%s,%s,%s,%s)", (str(my_uuid),username,_hashed_password, email))
+            cursor.execute("INSERT INTO users (id,username, password, email) VALUES (%s,%s,%s,%s)",
+                           (str(my_uuid), username, _hashed_password, email))
             conn.commit()
             flash('You have successfully registered!')
     elif request.method == 'POST':
@@ -240,14 +265,16 @@ def register():
     # Show registration form with message (if any)
     return render_template('loginsignform.html')
 
+
 @app.route('/logout')
 def logout():
     # Remove session data, this will log the user out
-   session.pop('loggedin', None)
-   session.pop('id', None)
-   session.pop('username', None)
-   # Redirect to login page
-   return redirect(url_for('login'))
+    session.pop('loggedin', None)
+    session.pop('id', None)
+    session.pop('username', None)
+    # Redirect to login page
+    return redirect(url_for('login'))
+
 
 @app.route('/profile')
 def profile():
@@ -261,6 +288,8 @@ def profile():
         return render_template('profile.html', account=account)
     # User is not loggedin redirect to login page
     return redirect(url_for('login'))
+
+
 @app.route('/folders/<folder_id>')
 def folders(folder_id):
     # Check if user is loggedin
@@ -270,27 +299,46 @@ def folders(folder_id):
         session['folder_id'] = folder_id
 
         query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{folder_id}' "
+        query_files = f"SELECT * FROM mycloud WHERE user_id='{user_id}' AND folder_id = {folder_id}"
+        query_current_space = f"SELECT SUM(file_size) FROM mycloud WHERE user_id='{user_id}'"
+
+        cursor.execute(query_current_space)
+        current_space = cursor.fetchall()
+        if current_space[0][0] is not None:
+            print(current_space)
+            current_space = current_space[0][0]
+            current_space_as_percent = int((current_space / MAX_USER_ALLOCATION) * 100)
+        else:
+            current_space = 0
+            current_space_as_percent = 0
 
         cursor.execute(query)
         folders = cursor.fetchall()
+        cursor.execute(query_files)
+        files = cursor.fetchall()
         for i in folders:
-            q = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{i[0]}'"
-            cursor.execute(q)
-            a = cursor.fetchall()
-            if len(a) > 0:
+            q_folder = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{i[0]}'"
+            q_file = query_files = f"SELECT * FROM mycloud WHERE user_id='{user_id}' AND folder_id = {i[0]}"
+            cursor.execute(q_folder)
+            f_folder = cursor.fetchall()
+            cursor.execute(q_file)
+            f_file = cursor.fetchall()
+            if len(f_folder) > 0 or len(f_file) > 0:
                 i.insert(len(i), True)
             else:
                 i.insert(len(i), False)
 
         # User is loggedin show them the home page
-        return render_template('inside_page.html', username=session['username'], folders=folders)
+        return render_template('inside_page.html', username=session['username'], folders=folders, files=files,
+                               folder_id=folder_id, current_space_as_percent=current_space_as_percent,
+                               current_space=current_space, max_space=MAX_USER_ALLOCATION)
     # User is not loggedin redirect to login page
 
     return redirect(url_for('login'))
 
+
 @app.route('/create_folder', methods=['POST'])
 def create_folder():
-
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     name = request.form.get('folder_name')
     user_id = session.get('id')
@@ -298,7 +346,7 @@ def create_folder():
     print(folder_id)
     print(name)
     print(user_id)
-    #conn.session.rollback()
+    # conn.session.rollback()
 
     if user_id:
         print("test")
@@ -308,6 +356,8 @@ def create_folder():
         conn.commit()
 
     return redirect(url_for('folders', folder_id=folder_id))
+
+
 @app.route('/thrash/<folder_id>')
 def thrash(folder_id):
     #   # Check if user is loggedin
@@ -322,15 +372,16 @@ def thrash(folder_id):
         conn.commit()
         # User is loggedin show them the home page
         return redirect(url_for('home'))
-     #User is not loggedin redirect to login page
+    # User is not loggedin redirect to login page
     return redirect(url_for('login'))
+
+
 @app.route('/thrashs/')
 def thrashs():
     # Check if user is loggedin
     if 'loggedin' in session:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         user_id = session.get('id')
-        print(user_id)
         query = f"SELECT * FROM thrash WHERE thrash_user_id= '{user_id}' "
         cursor.execute(query)
         folders = cursor.fetchall()
@@ -344,82 +395,73 @@ def thrashs():
                 i.insert(len(i), False)
 
         # User is loggedin show them the home page
-        return render_template('inside_page.html', username=session['username'], folders=folders)
+        return render_template('inside_page.html', username=session['username'], folders=folders, folder_id=0)
     # User is not loggedin redirect to login page
 
     return redirect(url_for('login'))
 
-@app.route('/upload', methods=['POST'])
-def upload_files():
-    info = {'success': False, 'errors': []}
 
-    if request.method == 'POST' and 'data_type' in request.form and request.form['data_type'] == 'upload_files':
-        folder = 'uploads/'
-        if not os.path.exists(folder):
-            os.makedirs(folder, 0o777, True)
-            with open(os.path.join(folder, ".HTACCESS"), "w") as htaccess_file:
-                htaccess_file.write("Options -Indexes")
+def allowed_file(filename):
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-        for key, file in request.files.items():
-            destination = os.path.join(folder, str(int(datetime.datetime.now().timestamp())) + file.filename)
-            if os.path.exists(destination):
-                destination = os.path.join(folder, str(int(datetime.datetime.now().timestamp())) + str(random.randint(0, 9999)) + file.filename)
+
+@app.route('/upload/to/<folder_id>', methods=['GET', 'POST'])
+def upload_file(folder_id):
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        user_id = session["id"]
+
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        query_current_space = f"SELECT SUM(file_size) FROM mycloud WHERE user_id='{user_id}'"
+        cursor.execute(query_current_space)
+        current_space = cursor.fetchall()[0][0]
+        if current_space is None:
+            current_space = 0
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            folder = os.path.join(app.config['UPLOAD_FOLDER'], user_id, folder_id)
+            destination = os.path.join(basedir, folder, filename)
+            os.makedirs(folder, exist_ok=True)  # Creates the directory,
 
             file.save(destination)
+            file_size = os.path.getsize(destination)
+            file_type = file.content_type
+            date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            date_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            # Check if there is enough space to save the file
-            occupied = info.get('drive_occupied', 0)
-            drive_total = info.get('drive_total', 0) * (1024 * 1024 * 1024)
+            if not current_space + file_size < MAX_USER_ALLOCATION:
+                flash('No space')
+                return redirect(request.url)
 
-            if occupied + os.path.getsize(destination) <= drive_total:
-                # Save to database
-                file_type = file.content_type
-                date_created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                date_updated = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                file_name = file.filename
-                file_path = destination
-                file_size = os.path.getsize(destination)
-                user_id = getattr(request.session.get('MY_DRIVE_USER', {}), 'id', 0)
-                folder_id = int(request.form.get('folder_id', 0))
-                slug = generate_slug()
+            query_string = f"INSERT INTO mycloud (file_name, file_size, file_path, user_id, file_type, data_created, data_updated, folder_id, favorite) VALUES " \
+                           f"('{filename}', '{file_size}', '{destination}', '{user_id}', '{file_type}', '{date_created}', '{date_updated}', '{folder_id}', 0)"
+            cursor.execute(query_string)
+            conn.commit()
 
-                query_string = f"INSERT INTO mydrive (file_name, file_size, file_path, user_id, file_type, date_created, date_updated, folder_id, slug) VALUES " \
-                               f"('{file_name}', '{file_size}', '{file_path}', '{user_id}', '{file_type}', '{date_created}', '{date_updated}', '{folder_id}', '{slug}')"
+            return redirect(url_for('home'))
+    return redirect(url_for('home'))
 
-                query(query_string)
 
-                info['success'] = True
-            else:
-                info['success'] = False
-                info['errors'].append("You don't have enough space to add that file")
-
-    return info
+@app.route('/download/<folder_id>/<file_name>', methods=['GET', 'POST'])
+def download_file(folder_id, file_name):
+    folder = os.path.join(app.config['UPLOAD_FOLDER'], session['id'], folder_id)
+    destination = os.path.join(basedir, folder)
+    return send_from_directory(destination, file_name)
 
 
 @app.route('/forget_password')
 def forget_password():
-    if not'loggedin' in session:
+    if not 'loggedin' in session:
+        return render_template('forgetpassword.html')
 
-
-     return render_template('forgetpassword.html')
-
-@app.route('/process_data', methods=['POST'])
-def process_data():
-    info = {}
-    info['success'] = False
-    info['LOGGED_IN'] = is_logged_in()
-    info['data_type'] = request.form.get('data_type', '')
-
-    works_without_login = ['user_signup', 'user_login', 'preview_file']
-    if not info['LOGGED_IN'] and info['data_type'] not in works_without_login:
-        return jsonify(info)
-
-    info['username'] = session.get('MY_DRIVE_USER', {}).get('username', 'User')
-    info['drive_occupied'] = get_drive_space(session.get('MY_DRIVE_USER', {}).get('id', 0))
-    info['drive_total'] = 10  # in GBs
-    info['breadcrumbs'] = []
-
-    return jsonify(info)
 
 if __name__ == "__main__":
     load_dotenv()
