@@ -77,7 +77,7 @@
                     <div class="percentile"></div>
             </div>
             <div class="js-drive-space-text class_9">
-                {{ current_space }} / {{ max_space }}
+                {{ current_space/1000000}} MB / {{ max_space/1000000 }} MB
             </div>
         </div>
         <div id="MY DRIVE" onclick="mode.set(this.id);table.change_folder_by_id(0)" class="class_16">
@@ -194,7 +194,7 @@
                     <td>{{ file[1] }}</td>
                     <td>{{ file[3] }}</td>
                     <td>{{ file[6] }}</td>
-                    <td>{{ file[2] }} Bytes</td>
+                    <td>{{ file[2]/1000000 }} MB </td>
                     <td class="icon-cell">
                         <!--
                                        Eğer kullanıcı silme işlemini onaylarsa thrash fonksiyonunu çağır

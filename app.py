@@ -24,8 +24,8 @@ from flask_oauthlib.client import OAuth
 from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = 'static\\uploads'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv'}
-MAX_USER_ALLOCATION = 5000000  # in bytes
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv','mp4','mp3','AVI','mkv','flv'}
+MAX_USER_ALLOCATION = 10000000  # in bytes
 
 app = Flask(__name__)
 app.debug = True
@@ -385,6 +385,18 @@ def thrashs():
         query = f"SELECT * FROM thrash WHERE thrash_user_id= '{user_id}' "
         cursor.execute(query)
         folders = cursor.fetchall()
+        query_current_space = f"SELECT SUM(file_size) FROM mycloud WHERE user_id='{user_id}'"
+
+        cursor.execute(query_current_space)
+        current_space = cursor.fetchall()
+        if current_space[0][0] is not None:
+            print(current_space)
+            current_space = current_space[0][0]
+            current_space_as_percent = int((current_space / MAX_USER_ALLOCATION) * 100)
+        else:
+            current_space = 0
+            current_space_as_percent = 0
+            cursor.execute(query)
         for i in folders:
             q = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{i[0]}'"
             cursor.execute(q)
@@ -395,7 +407,8 @@ def thrashs():
                 i.insert(len(i), False)
 
         # User is loggedin show them the home page
-        return render_template('inside_page.html', username=session['username'], folders=folders, folder_id=0)
+        return render_template('inside_page.html', username=session['username'], folders=folders, folder_id=0,current_space_as_percent=current_space_as_percent,
+                               current_space=current_space, max_space=MAX_USER_ALLOCATION)
     # User is not loggedin redirect to login page
 
     return redirect(url_for('login'))
