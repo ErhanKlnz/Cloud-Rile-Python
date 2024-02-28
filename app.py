@@ -24,7 +24,7 @@ from flask_oauthlib.client import OAuth
 from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = 'static\\uploads'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv','mp4','mp3','AVI','mkv','flv'}
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv','mp4','mp3','AVI','mkv','flv','rar'}
 MAX_USER_ALLOCATION = 10000000  # in bytes
 
 app = Flask(__name__)
@@ -144,6 +144,7 @@ def home():
         query_folders = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = 0"
         query_files = f"SELECT * FROM mycloud WHERE user_id='{user_id}' AND folder_id = 0"
         query_current_space = f"SELECT SUM(file_size) FROM mycloud WHERE user_id='{user_id}'"
+
 
         cursor.execute(query_current_space)
         current_space = cursor.fetchall()
