@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>CLOUDRELI</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='\assets\images\cloudreli.jpg') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/stylesheets/style.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/stylesheets/bootstrap-grid.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+
+
+<div class="container" id="container" style="max-width: 800px">
+    <div class="form-container sign-up-container">
+        <form action="{{ url_for('register') }}" method="post" autocomplete="off">
+            <h1>Hesap Oluştur</h1>
+            <div class="social-container">
+                <a href="{{url_for('githublogin')}}" class="social"><i class="fa-brands fa-github fa-xl"></i></a>
+                <a href="{{url_for('glogin')}}" class="social"><i class="fa-brands fa-google-plus-g fa-xl"></i></a>
+
+            </div>
+            <span>ya da e-posta ile kayıt ol</span>
+
+            <div class="row">
+                <div class="col-sm-1" style="padding-top: 10px">
+                        <span class="input-group-addon"><i class="fa fa-envelope fa" aria-hidden="true"></i></span>
+                </div>
+                <div class="col">
+                        <input type="text" class="form-control" name="email" id="email" placeholder="Emailinizi giriniz"
+                               required/>
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div class="col-sm-1" style="padding-top: 10px">
+                        <span class="input-group-addon"><i class="fa fa-lock fa-lg" aria-hidden="true"></i></span>
+                </div>
+                <div class="col">
+                    <div class="input-group">
+                        <input type="password" class="form-control" name="password" placeholder="Şifrenizi giriniz" id="password"
+                               required placeholder="Şifrenizi Giriniz"/>
+                    </div>
+                </div>
+            </div>
+            <input type="submit" value="Kayıt Ol" class="form-control btn btn-primary " name="">
+
+        </form>
+    </div>
+    <div class="form-container sign-in-container">
+        <form class="form-group" action="{{ url_for('login') }}" method="post">
+            <h1>Giriş Yap</h1>
+            <div class="social-container">
+                <a href="{{url_for('githublogin')}}" class="social"><i class="fa-brands fa-github fa-xl"></i></a>
+                <a href="{{url_for('glogin')}}" class="social"><i class="fa-brands fa-google-plus-g fa-xl"></i></a>
+            </div>
+            <span>ya da hesabını kullan</span>
+            <input type="email" class="form-control" name="email" placeholder="E-posta" id="email" required/>
+            <input type="password" class="form-control" name="password" placeholder="Şifre" id="password" required>
+            <a href="{{url_for('forgot_password')}}">Şifreni mi unuttun? Buraya tıkla!</a>
+
+            <input type="submit" value="Giriş" class="form-control btn btn-success " name="">
+            {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        {{ message }}
+
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            {% endwith %}
+        </form>
+
+        </form>
+    </div>
+    <div class="overlay-container">
+        <div class="overlay">
+            <div class="overlay-panel overlay-left">
+                <h1>Tekrardan Hoşgeldin!</h1>
+                <p>İçeriklerinize kolayca erişin!</p>
+                <button type="submit" class="ghost" id="signIn">Giriş Yap</button>
+
+            </div>
+            <div class="overlay-panel overlay-right">
+                <h1>Tanışıyor muyuz?</h1>
+                <p>Daha önce kayıt olmadıysan bilgilerini gir ve depolamaya başla. </p>
+                <button class="ghost" id="signUp">Kayıt ol</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="{{ url_for('static', filename='/scripts/script.js') }}"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+</body>
+</html>
