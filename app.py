@@ -3,7 +3,7 @@ import pathlib
 import requests
 import datetime
 import psycopg2.extras
-from flask import Flask, request, session, redirect, url_for, render_template, flash, abort, jsonify, send_file, json
+from flask import Flask, request, session, redirect, url_for, render_template, flash, abort, jsonify, send_file, json,send_from_directory,make_response
 import psycopg2
 import psycopg2.extras
 import re
@@ -14,14 +14,14 @@ from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
 from pip._vendor import cachecontrol
 import google.auth.transport.requests
-import random
+
 import uuid
-from flask import Flask, url_for, request, send_from_directory, send_file
 # from authlib.integrations.flask_client import OAuth, OAuthError
 from dotenv import load_dotenv
-from flask import Flask, redirect, url_for, session
-from flask_oauthlib.client import OAuth
 from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
+from os import getenv
+from authlib.integrations.flask_client import OAuth
 
 UPLOAD_FOLDER = 'static\\uploads'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv','mp4','mp3','AVI','mkv','flv','rar'}
@@ -39,39 +39,67 @@ DB_USER = "postgres"
 DB_PASS = "erhan.2001"
 
 conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASS)
-# twitter
+# github
 oauth = OAuth(app)
-
-facebook = oauth.remote_app(
-    'facebook',
-    consumer_key='658072539821648',
-    consumer_secret='9de56776348dc352ff38bd2e82bea2a3',
-    request_token_params={'scope': 'email'},
-    base_url='https://graph.facebook.com/',
-    request_token_url=None,
-    access_token_method='POST',
-    access_token_url='/oauth/access_token',
-    authorize_url='https://www.facebook.com/dialog/oauth'
+github = oauth.register(
+    name='github',
+    client_id='43eaaad483fb12e6d6c4',
+    client_secret='dcbe9ef7393f5144c41a2b07e78f494fce9f28cb',
+    access_token_url='https://github.com/login/oauth/access_token',
+    access_token_params=None,
+    authorize_url='https://github.com/login/oauth/authorize',
+    authorize_params=None,
+    api_base_url='https://api.github.com/',
+    client_kwargs={'scope': 'user:email'},
+    clock_skew_in_seconds=10
 )
 
 
-@app.route('/f_login')
-def f_login():
-    return facebook.authorize(callback=url_for('authorized', _external=True))
+@app.route('/github/login')
+def githublogin():
+    github = oauth.create_client('github')
+    redirect_uri = url_for('authorize', _external=True)
+    return github.authorize_redirect(redirect_uri)
 
 
-@app.route('/login/authorized')
-def authorized():
-    response = facebook.authorized_response()
-    if response is None or response.get('access_token') is None:
-        return 'Giriş yapılamadı!'
-    session['facebook_token'] = (response['access_token'], '')
-    return 'Başarıyla giriş yapıldı!'
+@app.route('/authorize')
+def authorize():
+    github = oauth.create_client('github')
+    token = github.authorize_access_token()
+    resp = github.get('user', token=token)
+
+    user_info = resp.json()
+    github_id = user_info['id']
+    username = user_info['login']
+    email = user_info['email']
+    print(username)
+    print(github_id)
+    session["id"] = github_id
+    session["username"] = username
+    session["email"] = email
+    session['loggedin'] = True
+
+    session['folder_id'] = 0
+
+    profile = resp.json()
+
+    session['loggedin'] = True
 
 
-@facebook.tokengetter
-def get_facebook_oauth_token():
-    return session.get('facebook_token')
+
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    query = f"SELECT* FROM users WHERE id = '{id}'"
+    cursor.execute(query)
+    user_find = cursor.fetchall()
+
+    if not user_find:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute("INSERT INTO users (id,username, email) VALUES (%s,%s,%s)", (str(id), username, email))
+        conn.commit()
+
+    print(profile, token)
+    return redirect(url_for('home'))
+
 
 
 # Google Connection
@@ -204,7 +232,7 @@ def login():
             password_rs = account[2]
             username = account[5]
 
-            if check_password_hash(password_rs, password):
+            if password_rs is not None and check_password_hash(password_rs, password):
                 # Account doesnt exist or username/password incorrect
                 print("başarılı")
                 flash('Incorrect username/password')
@@ -480,4 +508,4 @@ def forget_password():
 if __name__ == "__main__":
     load_dotenv()
     app.run(debug=True)
-    #
+

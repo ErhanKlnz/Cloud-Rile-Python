@@ -17,7 +17,7 @@
         <form action="{{ url_for('register') }}" method="post" autocomplete="off">
             <h1>Hesap Oluştur</h1>
             <div class="social-container">
-                <a href="{{url_for('f_login')}}" class="social"><i class="fa-brands fa-facebook fa-lg"></i></a>
+                <a href="{{url_for('githublogin')}}" class="social"><i class="fa-brands fa-github"></i></a>
                 <a href="{{url_for('glogin')}}" class="social"><i class="fab fa-google-plus-g"></i></a>
 
             </div>
@@ -53,7 +53,7 @@
         <form class="form-group" action="{{ url_for('login') }}" method="post">
             <h1>Giriş Yap</h1>
             <div class="social-container">
-                <a href="{{url_for('f_login')}}" class="social"><i class="fa-brands fa-facebook fa-lg"></i></a>
+                <a href="{{url_for('githublogin')}}" class="social"><i class="fa-brands fa-github"></i></a>
                 <a href="{{url_for('glogin')}}" class="social"><i class="fab fa-google-plus-g"></i></a>
             </div>
             <span>ya da hesabını kullan</span>
