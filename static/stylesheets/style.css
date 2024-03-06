@@ -260,3 +260,10 @@ footer a {
    height: auto!important;
 padding: 8px 12px !important;
 }
+.flashes {
+    color: rgb(233, 27, 27);
+	font-weight: bold;
+
+	 position: relative;
+
+      right: 20px;

@@ -7,14 +7,13 @@ from flask import Flask, request, session, redirect, url_for, render_template, f
 import psycopg2
 import psycopg2.extras
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from oauthlib.uri_validate import query
 from werkzeug.security import generate_password_hash, check_password_hash
 from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
 from pip._vendor import cachecontrol
 import google.auth.transport.requests
-
 import uuid
 # from authlib.integrations.flask_client import OAuth, OAuthError
 from dotenv import load_dotenv
@@ -22,7 +21,8 @@ from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from os import getenv
 from authlib.integrations.flask_client import OAuth
-
+import secrets
+from flask_mail import Mail, Message
 UPLOAD_FOLDER = 'static\\uploads'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv','mp4','mp3','AVI','mkv','flv','rar'}
 MAX_USER_ALLOCATION = 10000000  # in bytes
@@ -235,7 +235,7 @@ def login():
             if password_rs is not None and check_password_hash(password_rs, password):
                 # Account doesnt exist or username/password incorrect
                 print("başarılı")
-                flash('Incorrect username/password')
+
                 session['loggedin'] = True
                 session['id'] = id
                 session['email'] = email
@@ -243,10 +243,10 @@ def login():
                 return redirect(url_for('home'))
             else:
                 # Account doesnt exist or username/password incorrect
-                flash('Incorrect username/password')
+                flash('Email veya şifreniz yanlış!')
         else:
             # Account doesnt exist or username/password incorrect
-            flash('Incorrect username/password')
+            flash('Email veya şifreniz yanlış!')
 
     return render_template('loginsignform.html')
 
@@ -502,7 +502,121 @@ def download_file(folder_id, file_name):
 @app.route('/forget_password')
 def forget_password():
     if not 'loggedin' in session:
-        return render_template('forgetpassword.html')
+        return render_template('reset_password.html')
+
+def connect_to_db():
+    conn = psycopg2.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
+    return conn
+
+
+def generate_secret_key():
+    return secrets.token_urlsafe(16)
+
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USERNAME'] = 'cloudsiteresmi@gmail.com'
+app.config['MAIL_PASSWORD'] = 'tliu aepi tjcb pgju'
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+
+mail = Mail(app)
+
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email']
+        # Veritabanında e-posta kontrolü
+        conn = connect_to_db()
+        cur = conn.cursor()
+        cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+        user_id = cur.fetchone()
+        conn.close()
+
+        if user_id:
+            # Reset token oluştur
+            reset_token = generate_secret_key()
+
+            # Reset token'ı ve süresini veritabanına ekle
+            current_time = datetime.now()
+            conn = connect_to_db()
+            cur = conn.cursor()
+            cur.execute("INSERT INTO password_reset_tokens (user_id, token, creation_time, expiration_time) VALUES (%s, %s, %s, %s)",
+                        (user_id[0], reset_token, current_time, current_time + timedelta(days=1)))
+            conn.commit()
+            conn.close()
+
+            # E-posta gönderme işlemi burada gerçekleşecek
+            send_reset_email(email, reset_token)
+
+            flash("E-posta adresinize bir bağlantı gönderildi. Lütfen e-postanızı kontrol edin.")
+            return render_template('reset_password.html')
+        else:
+            flash("Bu e-posta adresiyle bir hesap bulunamadı.")
+            return render_template('reset_password.html')
+    else:
+        return render_template('reset_password.html')
+
+def send_reset_email(email, token):
+    reset_link = f"{request.host_url}reset_password/{token}"
+    click_here_text = f"<a href='{reset_link}'>Buraya tıklayın</a>"
+
+    msg = Message('Parola Sıfırlama', sender='cloudsiteresmi@gmail.com', recipients=[email])
+    msg.html = f"""Parolanızı sıfırlamak için lütfen {click_here_text}.
+
+Bağlantının süresi 24 saat içindedir. Eğer parolanızı sıfırlamak istemiyorsanız bu e-postayı görmezden gelebilirsiniz.
+"""
+    mail.send(msg)
+
+
+@app.route('/reset_password/<password_reset_token>', methods=['GET', 'POST'])
+def reset_password(password_reset_token):
+    if request.method == 'POST' and 'new_password' in request.form and 're_password' in request.form:
+        conn = connect_to_db()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT user_id FROM password_reset_tokens WHERE token = %s AND used = FALSE AND expiration_time > now()",
+            (password_reset_token,))
+        user_id = cur.fetchone()
+
+        if user_id:
+            new_password = request.form['new_password']
+            re_password = request.form['re_password']
+
+            if new_password == re_password:
+                cur.execute("UPDATE users SET password = %s WHERE id = %s", (generate_password_hash(new_password), user_id[0]))
+                conn.commit()
+
+                cur.execute("UPDATE password_reset_tokens SET used = TRUE WHERE token = %s", (password_reset_token,))
+                conn.commit()
+                conn.close()
+
+                flash("Şifreniz başarıyla güncellendi.")
+                return redirect(url_for('login'))
+            else:
+                flash("Yeni şifreniz ve onay şifreniz eşleşmiyor.")
+                return render_template('new_password.html')
+        else:
+            flash("Geçersiz veya kullanılmış bir bağlantı.")
+            return render_template('reset_password.html')
+    else:
+        conn = connect_to_db()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT user_id FROM password_reset_tokens WHERE token = %s AND used = FALSE AND expiration_time > now()",
+            (password_reset_token,))
+        print(password_reset_token)
+        user_id = cur.fetchone()
+        conn.close()
+
+        if user_id:
+            return render_template('new_password.html', password_reset_token=password_reset_token)
+        else:
+            flash("Geçersiz veya kullanılmış bir bağlantı.")
+            return render_template('reset_password.html')
+
+
+
 
 
 if __name__ == "__main__":
