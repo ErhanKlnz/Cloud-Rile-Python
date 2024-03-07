@@ -69,24 +69,18 @@ def authorize():
     resp = github.get('user', token=token)
 
     user_info = resp.json()
-    github_id = user_info['id']
+    id = user_info['id']
     username = user_info['login']
     email = user_info['email']
     print(username)
-    print(github_id)
-    session["id"] = github_id
+    print(email)
+    session["id"] = id
     session["username"] = username
     session["email"] = email
     session['loggedin'] = True
-
     session['folder_id'] = 0
-
     profile = resp.json()
-
     session['loggedin'] = True
-
-
-
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     query = f"SELECT* FROM users WHERE id = '{id}'"
     cursor.execute(query)
@@ -387,13 +381,13 @@ def create_folder():
     return redirect(url_for('folders', folder_id=folder_id))
 
 
-@app.route('/thrash/<folder_id>')
-def thrash(folder_id):
+@app.route('/thrashs/<folder_id>')
+def move_trash(folder_id):
     #   # Check if user is loggedin
     if 'loggedin' in session:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         user_id = session.get('id')
-        print(folder_id)
+        print("Silinen klasörün ID: " + folder_id)
         query = f"INSERT INTO thrash (thrash_user_id,thrash_folder_id, folders_created_time,thrash_folder_name) SELECT user_id, id, data_created,name FROM folders WHERE  user_id = '{user_id}' AND id = '{folder_id}'"
         cursor.execute(query)
         sqlquery = f"DELETE FROM folders WHERE  user_id = '{user_id}' AND id = '{folder_id}' OR parent ='{folder_id}'"
@@ -404,6 +398,55 @@ def thrash(folder_id):
     # User is not loggedin redirect to login page
     return redirect(url_for('login'))
 
+@app.route('/thrashs/files/<file_id>')
+def delete_file(file_id):
+    #   # Check if user is loggedin
+    if 'loggedin' in session:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        user_id = session.get('id')
+        print("Silinen dosyanın ID: " + file_id)
+        query = (f"INSERT INTO thrash (thrash_user_id, thrash_folder_id, folders_created_time, thrash_folder_name) "
+                 f"SELECT user_id, id, data_created, file_name FROM mycloud "
+                 f"WHERE  user_id = '{user_id}' AND id = '{file_id}'")
+        cursor.execute(query)
+        sqlquery = f"DELETE FROM mycloud WHERE  user_id = '{user_id}' AND id = '{file_id}'"
+        cursor.execute(sqlquery)
+        conn.commit()
+        # User is loggedin show them the home page
+        return redirect(url_for('home'))
+    # User is not loggedin redirect to login page
+    return redirect(url_for('login'))
+
+
+@app.route('/thrashs/remove/<thrash_folder_id>')
+def delete_folder(thrash_folder_id):
+    # Check if user is loggedin
+    if 'loggedin' in session:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        user_id = session.get('id')
+        print("Kalıcı silinen klasörün ID: " + thrash_folder_id)
+        query = f"DELETE FROM thrash WHERE thrash_user_id = '{user_id}' AND (thrash_folder_id = '{thrash_folder_id}')"
+        cursor.execute(query)
+        conn.commit()
+        # User is loggedin show them the home page
+        return redirect(url_for('home'))
+    # User is not loggedin redirect to login page
+    return redirect(url_for('login'))
+
+@app.route('/thrashs/remove/file/<file_id>')
+def remove_file(file_id):
+    # Check if user is loggedin
+    if 'loggedin' in session:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        user_id = session.get('id')
+        print("Kalıcı silinen klasörün ID: " + file_id)
+        query = f"DELETE FROM thrash WHERE thrash_user_id = '{user_id}' AND (thrash_folder_id = '{file_id}')"
+        cursor.execute(query)
+        conn.commit()
+        # User is loggedin show them the home page
+        return redirect(url_for('home'))
+    # User is not loggedin redirect to login page
+    return redirect(url_for('login'))
 
 @app.route('/thrashs/')
 def thrashs():
@@ -419,7 +462,7 @@ def thrashs():
         cursor.execute(query_current_space)
         current_space = cursor.fetchall()
         if current_space[0][0] is not None:
-            print(current_space)
+            # print(current_space)
             current_space = current_space[0][0]
             current_space_as_percent = int((current_space / MAX_USER_ALLOCATION) * 100)
         else:
@@ -436,7 +479,8 @@ def thrashs():
                 i.insert(len(i), False)
 
         # User is loggedin show them the home page
-        return render_template('inside_page.html', username=session['username'], folders=folders, folder_id=0,current_space_as_percent=current_space_as_percent,
+        return render_template('trash_page.html', username=session['username'], folders=folders, folder_id=0,
+                               current_space_as_percent=current_space_as_percent,
                                current_space=current_space, max_space=MAX_USER_ALLOCATION)
     # User is not loggedin redirect to login page
 
@@ -469,7 +513,7 @@ def upload_file(folder_id):
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            folder = os.path.join(app.config['UPLOAD_FOLDER'], user_id, folder_id)
+            folder = os.path.join(app.config['UPLOAD_FOLDER'], str(user_id), folder_id)
             destination = os.path.join(basedir, folder, filename)
             os.makedirs(folder, exist_ok=True)  # Creates the directory,
 
@@ -492,17 +536,20 @@ def upload_file(folder_id):
     return redirect(url_for('home'))
 
 
-@app.route('/download/<folder_id>/<file_name>', methods=['GET', 'POST'])
-def download_file(folder_id, file_name):
-    folder = os.path.join(app.config['UPLOAD_FOLDER'], session['id'], folder_id)
+
+@app.route('/view/<folder_id>/<file_name>', methods=['GET', 'POST'])
+def view_file(folder_id, file_name):
+    folder = os.path.join(app.config['UPLOAD_FOLDER'], str(session['id']), str(folder_id))
     destination = os.path.join(basedir, folder)
+    print(file_name + " " + folder_id)
     return send_from_directory(destination, file_name)
 
+@app.route('/download/<folder_id>/<file_name>', methods=['GET', 'POST'])
+def download_file(folder_id, file_name):
+    folder = os.path.join(app.config['UPLOAD_FOLDER'], str(session['id']), str(folder_id))
+    destination = os.path.join(basedir, folder)
+    return send_file(os.path.join(destination, file_name), as_attachment=True)
 
-@app.route('/forget_password')
-def forget_password():
-    if not 'loggedin' in session:
-        return render_template('reset_password.html')
 
 def connect_to_db():
     conn = psycopg2.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
@@ -583,7 +630,7 @@ def reset_password(password_reset_token):
             new_password = request.form['new_password']
             re_password = request.form['re_password']
 
-            if new_password == re_password:
+            if new_password == re_password and new_password.strip() != "":
                 cur.execute("UPDATE users SET password = %s WHERE id = %s", (generate_password_hash(new_password), user_id[0]))
                 conn.commit()
 
@@ -616,10 +663,9 @@ def reset_password(password_reset_token):
             return render_template('reset_password.html')
 
 
-
-
-
 if __name__ == "__main__":
     load_dotenv()
     app.run(debug=True)
+    #
+
 
