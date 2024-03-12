@@ -19,7 +19,7 @@ import uuid
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
-from os import getenv
+
 from authlib.integrations.flask_client import OAuth
 import secrets
 from flask_mail import Mail, Message
