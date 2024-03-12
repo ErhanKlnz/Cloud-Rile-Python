@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <title>CLOUDRELI</title>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='\assets\images\cloudreli.jpg') }}">
+    <link rel="shortcut icon"  type="image/x-icon"  href="\static\assets\images\cloud_14412 (1).ico" >
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/stylesheets/style.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/stylesheets/bootstrap-grid.min.css') }}">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -17,6 +17,7 @@
         <form action="{{ url_for('register') }}" method="post" autocomplete="off">
             <h1>Hesap Oluştur</h1>
             <div class="social-container">
+
                 <a href="{{url_for('githublogin')}}" class="social"><i class="fa-brands fa-github fa-xl"></i></a>
                 <a href="{{url_for('glogin')}}" class="social"><i class="fa-brands fa-google-plus-g fa-xl"></i></a>
 

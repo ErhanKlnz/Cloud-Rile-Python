@@ -72,8 +72,10 @@ def authorize():
     id = user_info['id']
     username = user_info['login']
     email = user_info['email']
+    avatar_url = user_info['avatar_url']
     print(username)
     print(email)
+    session['avatar_url']=avatar_url
     session["id"] = id
     session["username"] = username
     session["email"] = email
@@ -88,7 +90,7 @@ def authorize():
 
     if not user_find:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("INSERT INTO users (id,username, email) VALUES (%s,%s,%s)", (str(id), username, email))
+        cursor.execute("INSERT INTO users (id,username, email,user_avatar_url) VALUES (%s,%s,%s)", (str(id), username, email,avatar_url))
         conn.commit()
 
     print(profile, token)
@@ -129,10 +131,12 @@ def callback():
     session["id"] = id_info.get("sub")
     session["username"] = id_info.get("name")
     session["email"] = id_info.get("email")
+    session["avatar_url"] = id_info.get("picture")
     session['loggedin'] = True
     session['folder_id'] = 0
     email = session["email"]
     username = session["username"]
+    avatar_url = session["avatar_url"]
     id = session["id"]
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
@@ -142,7 +146,7 @@ def callback():
     print(id)
     if not user_find:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("INSERT INTO users (id,username, email) VALUES (%s,%s,%s)", (str(id), username, email))
+        cursor.execute("INSERT INTO users (id,username, email,avatar_url) VALUES (%s,%s,%s)", (str(id), username, email,avatar_url))
         conn.commit()
 
     return redirect(url_for('home'))
@@ -162,6 +166,8 @@ def home():
     if 'loggedin' in session:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         user_id = session.get('id')
+
+        avatar_url= session.get('avatar_url')
         # conn.session.rollback()
         query_folders = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = 0"
         query_files = f"SELECT * FROM mycloud WHERE user_id='{user_id}' AND folder_id = 0"
@@ -197,7 +203,7 @@ def home():
                 i.insert(len(i), False)
         # User is loggedin show them the home page
         return render_template('inside_page.html', username=session['username'], folders=folders, files=files,
-                               folder_id=0, current_space_as_percent=current_space_as_percent,
+                               folder_id=0, current_space_as_percent=current_space_as_percent,avatar_url=avatar_url,
                                current_space=current_space, max_space=MAX_USER_ALLOCATION)
     # User is not loggedin redirect to login page
 
@@ -208,6 +214,7 @@ def home():
 def login():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     session['folder_id'] = 0
+    session['avatar_url'] = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
     # Check if "username" and "password" POST requests exist (user submitted form)
     if request.method == 'POST' and 'email' in request.form and 'password' in request.form:
         email = request.form['email']
@@ -249,9 +256,9 @@ def login():
 def register():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    # Check if "username", "password" and "email" POST requests exist (user submitted form)
+
     if request.method == 'POST' and 'password' in request.form and 'email' in request.form:
-        # Create variables for easy access
+
 
         password = request.form['password']
         email = request.form['email']
@@ -259,7 +266,7 @@ def register():
         my_uuid = uuid.uuid4()
         username = email.split('@')[0]
         print(username)
-        # Check if account exists using MySQL
+
         query = f"SELECT * FROM users WHERE email='{email}'"
 
         cursor.execute(query)
@@ -267,7 +274,7 @@ def register():
 
         print('Your UUID is: ' + str(my_uuid))
         print(account)
-        # If account exists show error and validation checks
+
         if account:
             flash('Account already exists!')
         elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
@@ -277,21 +284,21 @@ def register():
         elif not username or not password or not email:
             flash('Please fill out the form!')
         else:
-            # Account doesnt exists and the form data is valid, now insert new account into users table
+
             cursor.execute("INSERT INTO users (id,username, password, email) VALUES (%s,%s,%s,%s)",
                            (str(my_uuid), username, _hashed_password, email))
             conn.commit()
             flash('You have successfully registered!')
     elif request.method == 'POST':
-        # Form is empty... (no POST data)
+
         flash('Please fill out the form!')
-    # Show registration form with message (if any)
+
     return render_template('loginsignform.html')
 
 
 @app.route('/logout')
 def logout():
-    # Remove session data, this will log the user out
+
     session.pop('loggedin', None)
     session.pop('id', None)
     session.pop('username', None)
@@ -351,11 +358,11 @@ def folders(folder_id):
             else:
                 i.insert(len(i), False)
 
-        # User is loggedin show them the home page
+
         return render_template('inside_page.html', username=session['username'], folders=folders, files=files,
                                folder_id=folder_id, current_space_as_percent=current_space_as_percent,
                                current_space=current_space, max_space=MAX_USER_ALLOCATION)
-    # User is not loggedin redirect to login page
+
 
     return redirect(url_for('login'))
 
@@ -412,9 +419,9 @@ def delete_file(file_id):
         sqlquery = f"DELETE FROM mycloud WHERE  user_id = '{user_id}' AND id = '{file_id}'"
         cursor.execute(sqlquery)
         conn.commit()
-        # User is loggedin show them the home page
+
         return redirect(url_for('home'))
-    # User is not loggedin redirect to login page
+
     return redirect(url_for('login'))
 
 
@@ -428,9 +435,9 @@ def delete_folder(thrash_folder_id):
         query = f"DELETE FROM thrash WHERE thrash_user_id = '{user_id}' AND (thrash_folder_id = '{thrash_folder_id}')"
         cursor.execute(query)
         conn.commit()
-        # User is loggedin show them the home page
+
         return redirect(url_for('home'))
-    # User is not loggedin redirect to login page
+
     return redirect(url_for('login'))
 
 @app.route('/thrashs/remove/file/<file_id>')
@@ -443,14 +450,14 @@ def remove_file(file_id):
         query = f"DELETE FROM thrash WHERE thrash_user_id = '{user_id}' AND (thrash_folder_id = '{file_id}')"
         cursor.execute(query)
         conn.commit()
-        # User is loggedin show them the home page
+
         return redirect(url_for('home'))
-    # User is not loggedin redirect to login page
+
     return redirect(url_for('login'))
 
 @app.route('/thrashs/')
 def thrashs():
-    # Check if user is loggedin
+
     if 'loggedin' in session:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         user_id = session.get('id')
@@ -462,7 +469,7 @@ def thrashs():
         cursor.execute(query_current_space)
         current_space = cursor.fetchall()
         if current_space[0][0] is not None:
-            # print(current_space)
+
             current_space = current_space[0][0]
             current_space_as_percent = int((current_space / MAX_USER_ALLOCATION) * 100)
         else:

@@ -5,6 +5,7 @@
     <title>CLOUDRILE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/bootstrap-icons.css') }}">
+    <link rel="shortcut icon"  type="image/x-icon"  href="\static\assets\images\cloud_14412 (1).ico" >
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/styles_main.css') }}">
     <link rel="stylesheet" type="text/css"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -55,7 +56,7 @@
         </h1>
     </div>
     <div class="class_7">
-        <img src="static/assets/images/beautiful-sincere-happy-girl-smiling-laughing_176420-9693.jpg" class="class_8">
+        <img src="{{avatar_url}}" class="class_8">
         <div class="class_9">
             <span class="username">{{ username }}</span> <a class="class_52" href="{{ url_for('logout')}}"
                                                             onclick="table.logout()"
@@ -133,7 +134,7 @@
                         Dosya Boyutu
                     </th>
                     <th scope="col">
-                        Action
+
                     </th>
                 </tr>
                 {% for folder in folders %}
@@ -340,11 +341,11 @@
             <button class="class_42" style="padding-top:4px;padding-bottom:4px;background-color: red;">X</button>
         </div>
 
-        <h3><i class="bi bi-folder-fill"></i> New Folder</h3>
+        <h3><i class="bi bi-folder-fill"></i> Yeni Klasör</h3>
         <form action="{{ url_for('create_folder') }}" method="POST">
             <input class="js-new-folder-input" type="text" style="width:100%;padding:1em;border: solid thin #ccc;"
                    name="folder_name">
-            <button type="submit" class="class_42" style="width:100px">Save</button>
+            <button type="submit" class="class_42" style="width:100px">Oluştur</button>
         </form>
     </div>
 </div>
