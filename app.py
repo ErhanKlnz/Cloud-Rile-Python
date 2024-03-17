@@ -19,12 +19,11 @@ import uuid
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
-
 from authlib.integrations.flask_client import OAuth
 import secrets
 from flask_mail import Mail, Message
 UPLOAD_FOLDER = 'static\\uploads'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv','mp4','mp3','AVI','mkv','flv','rar'}
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv', 'mp4', 'mp3', 'AVI', 'mkv', 'flv', 'rar'}
 MAX_USER_ALLOCATION = 10000000  # in bytes
 
 app = Flask(__name__)
@@ -75,7 +74,7 @@ def authorize():
     avatar_url = user_info['avatar_url']
     print(username)
     print(email)
-    session['avatar_url']=avatar_url
+    session['avatar_url'] = avatar_url
     session["id"] = id
     session["username"] = username
     session["email"] = email
@@ -90,7 +89,7 @@ def authorize():
 
     if not user_find:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("INSERT INTO users (id,username, email,user_avatar_url) VALUES (%s,%s,%s)", (str(id), username, email,avatar_url))
+        cursor.execute("INSERT INTO users (id,username, email,user_avatar_url) VALUES (%s,%s,%s,%s)", (str(id), username, email, avatar_url))
         conn.commit()
 
     print(profile, token)
@@ -146,7 +145,7 @@ def callback():
     print(id)
     if not user_find:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("INSERT INTO users (id,username, email,avatar_url) VALUES (%s,%s,%s)", (str(id), username, email,avatar_url))
+        cursor.execute("INSERT INTO users (id,username, email,user_avatar_url) VALUES (%s,%s,%s,%s)", (str(id), username, email, avatar_url))
         conn.commit()
 
     return redirect(url_for('home'))
