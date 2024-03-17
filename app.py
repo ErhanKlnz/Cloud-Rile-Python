@@ -8,7 +8,7 @@ import psycopg2
 import psycopg2.extras
 import re
 from datetime import datetime, timedelta
-from oauthlib.uri_validate import query
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
@@ -95,8 +95,6 @@ def authorize():
     print(profile, token)
     return redirect(url_for('home'))
 
-
-
 # Google Connection
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"  # to allow Http traffic for local dev
 GOOGLE_CLIENT_ID = "733339164445-d0o2qd6f28dpkv792ckt80adv3cmn47e.apps.googleusercontent.com"
@@ -107,7 +105,6 @@ flow = Flow.from_client_secrets_file(
             "openid"],
     redirect_uri="http://127.0.0.1:5000/callback"
 )
-
 
 @app.route("/callback")
 def callback():
@@ -149,7 +146,6 @@ def callback():
         conn.commit()
 
     return redirect(url_for('home'))
-
 
 @app.route("/glogin")
 def glogin():
