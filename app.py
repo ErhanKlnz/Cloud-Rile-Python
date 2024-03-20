@@ -8,7 +8,7 @@ import psycopg2
 import psycopg2.extras
 import re
 from datetime import datetime, timedelta
-
+from oauthlib.uri_validate import query
 from werkzeug.security import generate_password_hash, check_password_hash
 from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 from authlib.integrations.flask_client import OAuth
 import secrets
 from flask_mail import Mail, Message
+
 UPLOAD_FOLDER = 'static\\uploads'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv', 'mp4', 'mp3', 'AVI', 'mkv', 'flv', 'rar'}
 MAX_USER_ALLOCATION = 10000000  # in bytes
@@ -70,29 +71,31 @@ def authorize():
     user_info = resp.json()
     id = user_info['id']
     username = user_info['login']
-    email = user_info['email']
+
     avatar_url = user_info['avatar_url']
     print(username)
-    print(email)
+
     session['avatar_url'] = avatar_url
     session["id"] = id
     session["username"] = username
-    session["email"] = email
+    print(avatar_url)
+
     session['loggedin'] = True
     session['folder_id'] = 0
-    profile = resp.json()
     session['loggedin'] = True
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     query = f"SELECT* FROM users WHERE id = '{id}'"
     cursor.execute(query)
     user_find = cursor.fetchall()
 
+
+
     if not user_find:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("INSERT INTO users (id,username, email,user_avatar_url) VALUES (%s,%s,%s,%s)", (str(id), username, email, avatar_url))
+        cursor.execute("INSERT INTO users (id,username) VALUES (%s,%s,%s)", (str(id), username,avatar_url,))
         conn.commit()
 
-    print(profile, token)
+
     return redirect(url_for('home'))
 
 # Google Connection
@@ -139,10 +142,10 @@ def callback():
     query = f"SELECT* FROM users WHERE id = '{id}'"
     cursor.execute(query)
     user_find = cursor.fetchall()
-    print(id)
+
     if not user_find:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("INSERT INTO users (id,username, email,user_avatar_url) VALUES (%s,%s,%s,%s)", (str(id), username, email, avatar_url))
+        cursor.execute("INSERT INTO users (id,username, email,user_avatar_url) VALUES (%s,%s,%s,%s)", (str(id), username, email, avatar_url,))
         conn.commit()
 
     return redirect(url_for('home'))
@@ -162,14 +165,13 @@ def home():
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         user_id = session.get('id')
 
-        avatar_url= session.get('avatar_url')
+        avatar_url = session.get('avatar_url')
         # conn.session.rollback()
         query_folders = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = 0"
         query_files = f"SELECT * FROM mycloud WHERE user_id='{user_id}' AND folder_id = 0"
         query_current_space = f"SELECT SUM(file_size) FROM mycloud WHERE user_id='{user_id}'"
-
-
         cursor.execute(query_current_space)
+
         current_space = cursor.fetchall()
         if current_space[0][0] is not None:
             print(current_space)
@@ -180,7 +182,6 @@ def home():
             current_space_as_percent = 0
         cursor.execute(query_folders)
         folders = cursor.fetchall()
-
         cursor.execute(query_files)
         files = cursor.fetchall()
 
@@ -196,11 +197,10 @@ def home():
                 i.insert(len(i), True)
             else:
                 i.insert(len(i), False)
-        # User is loggedin show them the home page
+
         return render_template('inside_page.html', username=session['username'], folders=folders, files=files,
-                               folder_id=0, current_space_as_percent=current_space_as_percent,avatar_url=avatar_url,
+                               folder_id=0, current_space_as_percent=current_space_as_percent, avatar_url=avatar_url,
                                current_space=current_space, max_space=MAX_USER_ALLOCATION)
-    # User is not loggedin redirect to login page
 
     return redirect(url_for('login'))
 
@@ -251,9 +251,9 @@ def login():
 def register():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-
     if request.method == 'POST' and 'password' in request.form and 'email' in request.form:
 
+        avatar_url = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
 
         password = request.form['password']
         email = request.form['email']
@@ -271,22 +271,22 @@ def register():
         print(account)
 
         if account:
-            flash('Account already exists!')
+            flash('Bu emaili ait başka bir hesap zaten var!')
         elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
-            flash('Invalid email address!')
+            flash('Geçersiz email adresi!')
         elif not re.match(r'[A-Za-z0-9]+', username):
-            flash('Username must contain only characters and numbers!')
+            flash('Kullanıcı adı yalnızca karakter ve rakamlardan oluşmalıdır!')
         elif not username or not password or not email:
-            flash('Please fill out the form!')
+            flash('Lütfen formudoldurun!')
         else:
 
-            cursor.execute("INSERT INTO users (id,username, password, email) VALUES (%s,%s,%s,%s)",
-                           (str(my_uuid), username, _hashed_password, email))
+            cursor.execute("INSERT INTO users (id,username, password, email,user_avatar_url) VALUES (%s,%s,%s,%s,%s)",
+                           (str(my_uuid), username, _hashed_password, email,avatar_url))
             conn.commit()
-            flash('You have successfully registered!')
+            flash('Başarıyla kayıt oldunuz!')
     elif request.method == 'POST':
 
-        flash('Please fill out the form!')
+        flash('Lütfen formları doldurun!')
 
     return render_template('loginsignform.html')
 
@@ -309,20 +309,19 @@ def profile():
     if 'loggedin' in session:
         cursor.execute('SELECT * FROM users WHERE id = %s', [session['id']])
         account = cursor.fetchone()
-        # Show the profile page with account info
+
         return render_template('profile.html', account=account)
-    # User is not loggedin redirect to login page
+
     return redirect(url_for('login'))
 
 
 @app.route('/folders/<folder_id>')
 def folders(folder_id):
-    # Check if user is loggedin
+
     if 'loggedin' in session:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         user_id = session.get('id')
         session['folder_id'] = folder_id
-
         query = f"SELECT * FROM folders WHERE user_id= '{user_id}' AND parent = '{folder_id}' "
         query_files = f"SELECT * FROM mycloud WHERE user_id='{user_id}' AND folder_id = {folder_id}"
         query_current_space = f"SELECT SUM(file_size) FROM mycloud WHERE user_id='{user_id}'"
@@ -355,7 +354,7 @@ def folders(folder_id):
 
 
         return render_template('inside_page.html', username=session['username'], folders=folders, files=files,
-                               folder_id=folder_id, current_space_as_percent=current_space_as_percent,
+                               folder_id=folder_id, current_space_as_percent=current_space_as_percent,avatar_url=session["avatar_url"],
                                current_space=current_space, max_space=MAX_USER_ALLOCATION)
 
 
@@ -456,6 +455,7 @@ def thrashs():
     if 'loggedin' in session:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         user_id = session.get('id')
+
         query = f"SELECT * FROM thrash WHERE thrash_user_id= '{user_id}' "
         cursor.execute(query)
         folders = cursor.fetchall()
@@ -481,10 +481,8 @@ def thrashs():
                 i.insert(len(i), False)
 
         # User is loggedin show them the home page
-        return render_template('trash_page.html', username=session['username'], folders=folders, folder_id=0,
-                               current_space_as_percent=current_space_as_percent,
-                               current_space=current_space, max_space=MAX_USER_ALLOCATION)
-    # User is not loggedin redirect to login page
+        return render_template('trash_page.html', username=session['username'], folders=folders, folder_id=0,avatar_url=session["avatar_url"],
+                               current_space_as_percent=current_space_as_percent,current_space=current_space, max_space=MAX_USER_ALLOCATION)
 
     return redirect(url_for('login'))
 

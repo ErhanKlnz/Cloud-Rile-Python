@@ -7,8 +7,7 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/bootstrap-icons.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/styles_main.css') }}">
     <link rel="shortcut icon"  type="image/x-icon"  href="\static\assets\images\cloud_14412 (1).ico" >
-    <link rel="stylesheet" type="text/css"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
@@ -56,7 +55,7 @@
         </h1>
     </div>
     <div class="class_7">
-        <img src="static/assets/images/beautiful-sincere-happy-girl-smiling-laughing_176420-9693.jpg" class="class_8">
+         <img src="{{avatar_url}}" class="class_8">
         <div class="class_9">
             <span class="username">{{ username }}</span> <a class="class_52" href="{{ url_for('logout')}}"
                                                             onclick="table.logout()"
@@ -104,6 +103,11 @@
         <h1 class="js-mode-title class_27">
             Çöp Kutusu
         </h1>
+        <style>
+          th {
+            text-align: left;
+              }
+        </style>
         <div class="class_28">
             <table oncontextmenu="submenu.show(event)" class="item_class_0 class_29" style="font-size:13px">
                 <thead>
