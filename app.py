@@ -24,7 +24,7 @@ import secrets
 from flask_mail import Mail, Message
 
 UPLOAD_FOLDER = 'static\\uploads'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv', 'mp4', 'mp3', 'AVI', 'mkv', 'flv', 'rar'}
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv', 'mp4', 'mp3', 'AVI', 'mkv', 'flv', 'rar', 'docx', 'pptx ', 'xlsx', 'doc', 'ppt', 'pptx', 'zip', 'xls', 'xlsx', 'svg', 'ico'}
 MAX_USER_ALLOCATION = 10000000  # in bytes
 
 app = Flask(__name__)
@@ -155,6 +155,13 @@ def glogin():
     authorization_url, state = flow.authorization_url()
     session["state"] = state
     return redirect(authorization_url)
+@app.route("/main")
+def mainn():
+
+    return render_template('mainpageform.html')
+
+
+
 
 
 ###login and register
@@ -661,6 +668,7 @@ def reset_password(password_reset_token):
         else:
             flash("Geçersiz veya kullanılmış bir bağlantı.")
             return render_template('reset_password.html')
+
 
 
 if __name__ == "__main__":

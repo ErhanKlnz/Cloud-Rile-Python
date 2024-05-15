@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>CLOUDRILE</title>
+    <title>CLOUDRELI</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/bootstrap-icons.css') }}">
     <link rel="shortcut icon"  type="image/x-icon"  href="\static\assets\images\cloud_14412 (1).ico" >
@@ -78,7 +78,7 @@
                     <div class="percentile"></div>
             </div>
             <div class="js-drive-space-text class_9">
-                {{ current_space/1000000}} MB / {{ max_space/1000000 }} MB
+                 {{ '%0.2f'|format(current_space/1000000) }} MB / {{ max_space/1000000 }} MB
             </div>
         </div>
         <div id="MY DRIVE" onclick="mode.set(this.id);table.change_folder_by_id(0)" class="class_16">
@@ -107,11 +107,11 @@
                 My Second Folder
             </div>
             -->
-          <style>
-          th {
-            text-align: left;
-              }
-          </style>
+           <style>
+             th {
+                 text-align: left;
+                }
+            </style>
         </div>
         <h1 class="js-mode-title class_27">
             Drive'ım
@@ -155,9 +155,9 @@
                         {% endif %}
                     </td>
                     <td>{{ folder[1] }}</td>
-                    <td>dosya</td>
+                    <td>klasör</td>
                     <td>{{ folder[2] }}</td>
-                    <td>size</td>
+                    <td></td>
                     <td class="icon-cell">
                         <!--
                                        Eğer kullanıcı silme işlemini onaylarsa thrash fonksiyonunu çağır
@@ -197,7 +197,7 @@
                     <td>{{ file[1] }}</td>
                     <td>{{ file[3] }}</td>
                     <td>{{ file[6] }}</td>
-                    <td>{{ file[2]/1000000 }} MB </td>
+                    <td>{{ '%0.2f'|format(file[2]/1000000) }} MB </td>
                     <td class="icon-cell">
                         <!--
                                        Eğer kullanıcı silme işlemini onaylarsa thrash fonksiyonunu çağır

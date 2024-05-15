@@ -2,12 +2,13 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>CLOUDRILE</title>
+    <title>CLOUDRELI</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/bootstrap-icons.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/assets/css/styles_main.css') }}">
     <link rel="shortcut icon"  type="image/x-icon"  href="\static\assets\images\cloud_14412 (1).ico" >
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
@@ -55,7 +56,7 @@
         </h1>
     </div>
     <div class="class_7">
-         <img src="{{avatar_url}}" class="class_8">
+        <img src="{{avatar_url}}" class="class_8">
         <div class="class_9">
             <span class="username">{{ username }}</span> <a class="class_52" href="{{ url_for('logout')}}"
                                                             onclick="table.logout()"
@@ -78,7 +79,7 @@
                 <div class="percentile"></div>
             </div>
             <div class="js-drive-space-text class_9">
-                {{ current_space/1000000}} MB / {{ max_space/1000000 }} MB
+                 {{ '%0.2f'|format(current_space/1000000) }} MB / {{ max_space/1000000 }} MB
             </div>
         </div>
         <div id="MY DRIVE" onclick="mode.set(this.id);table.change_folder_by_id(0)" class="class_16">
@@ -103,11 +104,11 @@
         <h1 class="js-mode-title class_27">
             Çöp Kutusu
         </h1>
-        <style>
-          th {
-            text-align: left;
-              }
-        </style>
+             <style>
+                th {
+                  text-align: left;
+                   }
+            </style>
         <div class="class_28">
             <table oncontextmenu="submenu.show(event)" class="item_class_0 class_29" style="font-size:13px">
                 <thead>
@@ -137,35 +138,39 @@
                 <tr>
                     <td>
                         {% if folder[7] %}
-                        <a href="{{ url_for('folders', folder_id=folder[0], thrash_folder_id=folder[0]) }}" style="color: #16a095;">
+                        <a href="{{ url_for('move_trash', folder_id=folder_id) }}" style="color: #16a095;">
                             <i class="fa-solid fa-folder"></i>
                         </a>
-                        {% else %}
-                        <a href="{{ url_for('folders', folder_id=folder[0], thrash_folder_id=folder[0]) }}" style="color: #16a095;">
 
-                        </a>
+                        {% else %}
+
                         {% endif %}
                     </td>
                     <td>{{ folder[1] }}</td>
-                    <td>dosya</td>
+                    <td>{{ folder[7] }}</td>
                     <td>{{ folder[2] }}</td>
-                    <td>size</td>
+                    <td>{% if folder[6] is none %}
+                         0 MB
+                         {% else %}
+                         {{ '%0.2f'|format(folder[6]/1000000) }} MB
+                          {% endif %}
+                    </td>
                     <td class="icon-cell">
                         <!-- Eğer kullanıcı silme işlemini onaylarsa thrash fonksiyonunu çağır
                              İptal ederse hiçbir şey yapma -->
                         <a href="javascript:void(0);" class="fa-regular fa-trash-can" style="color: #16a095;"
-                           onclick="confirmDelete('{{ folder[0] }}')"></a>
+                           onclick="confirmDelete('{{ folder[4] }}')"></a>
 
                     </td>
                 </tr>
 
                 <script>
-                    function confirmDelete(folderId) {
+                    function confirmDelete(binID) {
                         var result = confirm("Emin misin?");
 
                         if (result) {
                             // Kullanıcı OK düğmesine tıkladı, silme işlemi yapabilirsiniz
-                            window.location.href = "{{ url_for('delete_folder', thrash_folder_id=thrash_folder_id) }}" + folderId;
+                            window.location.href = "{{ url_for('remove', bin_id='') }}" + binID;
 
                         } else {
                             // Kullanıcı İptal düğmesine tıkladı, hiçbir şey yapmayabilirsiniz
@@ -178,8 +183,8 @@
                 {% for file in files %}
                 <tr>
                     <td>
-                        <a href="#" style="color: #16a095;">
-                            <i class="fa-solid fa-file-lines"></i>
+                        <a href="{{ url_for('delete_file', file_id=folder[5]) }}" style="color: #16a095;">
+                            <i class="fa-solid fa-folder"></i>
                         </a>
 
                     </td>
@@ -191,18 +196,18 @@
                         <!-- Eğer kullanıcı silme işlemini onaylarsa thrash fonksiyonunu çağır
                              İptal ederse hiçbir şey yapma -->
                         <a href="javascript:void(0);" class="fa-regular fa-trash-can" style="color: #16a095;"
-                           onclick="confirmDeleteFile('{{ file[0] }}')"></a>
+                           onclick="confirmDeleteFile('{{ file[4] }}')"></a>
 
                     </td>
                 </tr>
 
                  <script>
-                    function confirmDeleteFile(fileID) {
+                    function confirmDeleteFile(binID) {
                         var result = confirm("Emin misin?");
 
                         if (result) {
                             // Kullanıcı OK düğmesine tıkladı, silme işlemi yapabilirsiniz
-                            window.location.href = "{{ url_for('delete_file', file_id='') }}" + fileID;
+                            window.location.href = "{{ url_for('remove', bin_id='') }}" + binID;
                         } else {
                             // Kullanıcı İptal düğmesine tıkladı, hiçbir şey yapmayabilirsiniz
                         }
